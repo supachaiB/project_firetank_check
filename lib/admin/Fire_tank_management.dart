@@ -541,7 +541,7 @@ class _FireTankFormPageState extends State<FireTankFormPage> {
           'building': _building,
           'floor': _floor,
           'status': 'ยังไม่ตรวจสอบ',
-          'status_technician': 'ยังไม่ตรวจสอบ', // เพิ่มฟิลด์ status_technician
+          'status_technician': 'ยังไม่ตรวจสอบ', // เพิ่มฟิลด์  status_technician
           'installation_date': _installationDate,
           'qrcode': _qrCode,
         });
