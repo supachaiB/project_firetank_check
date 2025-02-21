@@ -178,7 +178,7 @@ class _FormCheckPageState extends State<FormCheckPage> {
         _timeController.text.isEmpty ||
         (selectedStaff == null && _inspectorController.text.isEmpty) ||
         equipmentStatus.isEmpty ||
-        (equipmentStatus == 'น้ำหนัก(กก.)' && _weightController.text.isEmpty)) {
+        (fireTankType == 'CO2' && _weightController.text.isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('กรุณากรอกข้อมูลให้ครบถ้วน')),
       );
@@ -192,6 +192,9 @@ class _FormCheckPageState extends State<FormCheckPage> {
 
     CollectionReference formChecks =
         FirebaseFirestore.instance.collection('form_checks');
+    CollectionReference firetankCollection =
+        FirebaseFirestore.instance.collection('firetank_Collection');
+
     String docId =
         '${_dateController.text}_${widget.tankId}_${_inspectorController.text}';
 
@@ -202,17 +205,6 @@ class _FormCheckPageState extends State<FormCheckPage> {
     }
 
     try {
-      // ดึงค่า status จาก collection fire_Collection
-      CollectionReference fireCollection =
-          FirebaseFirestore.instance.collection('fire_Collection');
-
-      DocumentSnapshot fireDoc = await fireCollection.doc(widget.tankId).get();
-
-      if (fireDoc.exists) {
-        String fireStatus = fireDoc['status'] ?? 'ไม่ระบุ'; // ค่าจาก Firestore
-        newStatus = fireStatus; // ใช้ค่า status เดิมจาก fire_Collection
-      }
-
       // ถ้า fireTankType เป็น 'CO2' ต้องกรอกน้ำหนัก
       if (fireTankType == 'CO2' && _weightController.text.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -221,18 +213,24 @@ class _FormCheckPageState extends State<FormCheckPage> {
         return;
       }
 
-      // เตรียมข้อมูลที่ต้องการบันทึก
+      // เตรียมข้อมูลสำหรับ form_checks
       Map<String, dynamic> formCheckData = {
         'date_checked': _dateController.text,
-        'time_checked': _timeController.text, // บันทึกเวลา
+        'time_checked': _timeController.text,
         'inspector': selectedStaff ?? _inspectorController.text,
         'user_type': userType,
         'equipment_status': equipmentStatus,
         'remarks': _remarkController.text,
         'tank_id': widget.tankId,
-        'status': newStatus, // เพิ่มฟิลด์ status ที่ดึงมาจาก fire_Collection
-        'status_technician': newStatus, // เพิ่มฟิลด์ status_technician
       };
+
+      // กำหนดข้อมูลให้ตรงกับประเภทผู้ใช้สำหรับ form_checks
+      if (userType == 'ผู้ใช้ทั่วไป') {
+        formCheckData['status'] = newStatus; // บันทึกเฉพาะ status
+      } else if (userType == 'ช่างเทคนิค') {
+        formCheckData['status_technician'] =
+            newStatus; // บันทึกเฉพาะ status_technician
+      }
 
       // ถ้าเป็น CO2 ให้บันทึกข้อมูลในลักษณะพิเศษ
       if (fireTankType == 'CO2') {
@@ -242,7 +240,7 @@ class _FormCheckPageState extends State<FormCheckPage> {
           'สภาพสายฉีด': equipmentStatus['สภาพสายฉีด'],
           'สลักถังดับเพลิง': equipmentStatus['สลักถังดับเพลิง'],
         };
-        formCheckData['Weight_tank'] = _weightController.text; // น้ำหนัก
+        formCheckData['Weight_tank'] = _weightController.text;
       }
       // ถ้าเป็น BF2000
       else if (fireTankType == 'BF2000') {
@@ -266,8 +264,35 @@ class _FormCheckPageState extends State<FormCheckPage> {
         formCheckData['Weight_tank'] = ''; // น้ำหนักจะเป็นค่าว่าง
       }
 
-      // บันทึกข้อมูลลง Firestore
+      // บันทึกข้อมูลลง Firestore (form_checks)
       await formChecks.doc(docId).set(formCheckData);
+
+      // ค้นหาเอกสารที่ตรงกับ tank_id ใน firetankCollection
+      QuerySnapshot snapshot = await firetankCollection
+          .where('tank_id', isEqualTo: widget.tankId)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        // ถ้ามีเอกสารที่ตรงกับ tank_id
+        DocumentSnapshot fireDoc = snapshot.docs.first;
+
+        Map<String, dynamic> firetankCollectionData = {};
+
+        // กำหนดข้อมูลสำหรับ firetankCollection
+        if (userType == 'ผู้ใช้ทั่วไป') {
+          firetankCollectionData['status'] = newStatus; // บันทึกเฉพาะ status
+        } else if (userType == 'ช่างเทคนิค') {
+          firetankCollectionData['status_technician'] =
+              newStatus; // บันทึกเฉพาะ status_technician
+        }
+
+        // อัปเดตสถานะใน Firestore
+        if (firetankCollectionData.isNotEmpty) {
+          await firetankCollection
+              .doc(fireDoc.id) // ใช้ docId ที่ตรงกับ tank_id
+              .update(firetankCollectionData);
+        }
+      }
 
       // แสดงข้อความแจ้งเตือนเมื่อบันทึกเสร็จ
       ScaffoldMessenger.of(context).showSnackBar(
@@ -336,8 +361,7 @@ class _FormCheckPageState extends State<FormCheckPage> {
                           }
 
                           if (snapshot.hasError) {
-                            print(
-                                'เกิดข้อผิดพลาด: ${snapshot.error}'); // พิมพ์ข้อผิดพลาดที่เกิดขึ้นใน Console
+                            print('เกิดข้อผิดพลาด: ${snapshot.error}');
                             return Text(
                               'วันที่ตรวจสอบล่าสุด: เกิดข้อผิดพลาด',
                               style: TextStyle(fontSize: fontSize),
@@ -392,35 +416,61 @@ class _FormCheckPageState extends State<FormCheckPage> {
                               snapshot.data!.docs.isNotEmpty) {
                             final latestStatus = snapshot.data!.docs.first
                                 .data() as Map<String, dynamic>;
-                            final status =
+                            final userStatus =
                                 latestStatus['status'] ?? 'ไม่มีข้อมูล';
+                            final technicianStatus =
+                                latestStatus['status_technician'] ??
+                                    'ไม่มีข้อมูล';
 
-                            return Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            // สร้างฟังก์ชันเพื่อกำหนดสีตามสถานะ
+                            Color getStatusColor(String status) {
+                              if (status == 'ชำรุด') return Colors.red;
+                              if (status == 'ส่งซ่อม') return Colors.orange;
+                              return Colors.green;
+                            }
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                Text(
+                                  'สถานะล่าสุด: ',
+                                  style: TextStyle(fontSize: fontSize),
+                                ),
+                                SizedBox(height: 8),
                                 Row(
                                   children: [
                                     Text(
-                                      'สถานะล่าสุด: ',
+                                      'ผู้ใช้ทั่วไป: ',
                                       style: TextStyle(fontSize: fontSize),
                                     ),
                                     Icon(
                                       Icons.circle,
-                                      color: status == 'ชำรุด'
-                                          ? Colors.red
-                                          : status == 'ส่งซ่อม'
-                                              ? Colors.orange
-                                              : Colors
-                                                  .green, // สีส้มสำหรับสถานะ "ส่งซ่อม"
+                                      color: getStatusColor(userStatus),
                                       size: 12,
                                     ),
                                     SizedBox(width: 8),
-                                    Text(
-                                      status,
-                                      style: TextStyle(fontSize: fontSize),
-                                    ),
+                                    Text(userStatus,
+                                        style: TextStyle(fontSize: fontSize)),
                                   ],
                                 ),
+                                SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Text(
+                                      'ช่างเทคนิค: ',
+                                      style: TextStyle(fontSize: fontSize),
+                                    ),
+                                    Icon(
+                                      Icons.circle,
+                                      color: getStatusColor(technicianStatus),
+                                      size: 12,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(technicianStatus,
+                                        style: TextStyle(fontSize: fontSize)),
+                                  ],
+                                ),
+                                SizedBox(height: 8),
                                 TextButton(
                                   onPressed: () {
                                     Navigator.push(
