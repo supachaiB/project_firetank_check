@@ -98,13 +98,21 @@ class _FireTankDetailsPageState extends State<FireTankDetailsPage> {
                         style: TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 18),
                       ),
-                      Switch(
-                        value: isTechnicianView,
-                        onChanged: (bool value) {
-                          setState(() {
-                            isTechnicianView = value;
-                          });
-                        },
+                      Row(
+                        children: [
+                          Text(
+                            isTechnicianView ? 'ช่างเทคนิค' : 'ผู้ใช้ทั่วไป',
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                          Switch(
+                            value: isTechnicianView,
+                            onChanged: (bool value) {
+                              setState(() {
+                                isTechnicianView = value;
+                              });
+                            },
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -148,7 +156,11 @@ class _FireTankDetailsPageState extends State<FireTankDetailsPage> {
                               checkData['time_checked'] ?? 'ไม่มีข้อมูล';
                           final inspector =
                               checkData['inspector'] ?? 'ไม่มีข้อมูล';
-                          final status = checkData['status'] ?? 'ไม่มีข้อมูล';
+
+                          // ตรวจสอบสถานะตาม user_type และ isTechnicianView
+                          final status = isTechnicianView
+                              ? checkData['status_technician'] ?? 'ไม่มีข้อมูล'
+                              : checkData['status'] ?? 'ไม่มีข้อมูล';
 
                           return Container(
                             margin: const EdgeInsets.symmetric(vertical: 8),
