@@ -522,7 +522,7 @@ class _FireTankFormPageState extends State<FireTankFormPage> {
 
       //กรอกให้ครบ
       if (_type == null || _building == null || _floor == null) {
-        print('ข้อมูลไม่ครบ');
+        print('ข้อมูลไม่ครบนะ');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('กรุณากรอกข้อมูลให้ครบถ้วน')),
         );
