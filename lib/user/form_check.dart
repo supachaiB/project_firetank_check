@@ -426,6 +426,8 @@ class _FormCheckPageState extends State<FormCheckPage> {
                             Color getStatusColor(String status) {
                               if (status == 'ชำรุด') return Colors.red;
                               if (status == 'ส่งซ่อม') return Colors.orange;
+                              if (status == 'ยังไม่ตรวจสอบ') return Colors.grey;
+
                               return Colors.green;
                             }
 
