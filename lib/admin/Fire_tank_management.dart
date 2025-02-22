@@ -366,6 +366,8 @@ class _FireTankManagementPageState extends State<FireTankManagementPage> {
         child: const Icon(Icons.add, color: Colors.white),
         backgroundColor: Colors.blueAccent,
       ),
+      floatingActionButtonLocation:
+          FloatingActionButtonLocation.centerDocked, // ทำให้ปุ่มอยู่ตรงกลางล่าง
     );
   }
 }
@@ -522,7 +524,7 @@ class _FireTankFormPageState extends State<FireTankFormPage> {
 
       //กรอกให้ครบ
       if (_type == null || _building == null || _floor == null) {
-        print('ข้อมูลไม่ครบนะ');
+        print('ข้อมูลไม่ครบ');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('กรุณากรอกข้อมูลให้ครบถ้วน')),
         );
@@ -541,7 +543,7 @@ class _FireTankFormPageState extends State<FireTankFormPage> {
           'building': _building,
           'floor': _floor,
           'status': 'ยังไม่ตรวจสอบ',
-          'status_technician': 'ยังไม่ตรวจสอบ', // เพิ่มฟิลด์  status_technician
+          'status_technician': 'ยังไม่ตรวจสอบ', // เพิ่มฟิลด์ status_technician
           'installation_date': _installationDate,
           'qrcode': _qrCode,
         });
