@@ -135,27 +135,15 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
       if (docSnapshot.docs.isNotEmpty) {
         var docRef = docSnapshot.docs.first.reference;
 
-        // กำหนดฟิลด์ที่ต้องการอัปเดต
-        String fieldToUpdate = isTechnician ? 'status_technician' : 'status';
-
-        // อัปเดตสถานะใน firetank_Collection
-        await docRef.update({fieldToUpdate: newStatus});
-
-        // ถ้าเป็นผู้ใช้ทั่วไป ให้อัปเดตข้อมูลใน form_checks ด้วย
-        if (!isTechnician) {
-          await FirebaseFirestore.instance
-              .collection('form_checks')
-              .where('tank_id', isEqualTo: tankId)
-              .get()
-              .then((snapshot) {
-            for (var doc in snapshot.docs) {
-              doc.reference.update({'status': newStatus});
-            }
-          });
+        // ถ้าเป็นช่างเทคนิค ให้อัปเดตเฉพาะฟิลด์ status_technician
+        if (isTechnician) {
+          await docRef.update({'status_technician': newStatus});
+        } else {
+          await docRef.update({'status': newStatus});
         }
 
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('สถานะการตรวจสอบได้รับการอัปเดต')));
+            const SnackBar(content: Text('สถานะได้รับการอัปเดต')));
       } else {
         throw Exception('ไม่พบถังที่มี tank_id: $tankId');
       }
@@ -203,14 +191,25 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('ลบข้อมูลการตรวจสอบล่าสุดเรียบร้อย')));
 
-      // 4️⃣ อัปเดต UI โดยการลบข้อมูลออกจาก DataTable
+      // 4️⃣ อัปเดต UI โดยการลบข้อมูลออกจาก DataTable เฉพาะจากหน้าที่กำลังใช้งาน
       setState(() {
-        combinedData = combinedData
-            .where((inspection) =>
-                inspection['tank_id'] != tankId ||
-                inspection['date_checked'] != dateChecked ||
-                inspection['time_checked'] != latestDoc['time_checked'])
-            .toList();
+        if (isTechnician) {
+          // ลบข้อมูลที่เกี่ยวข้องในหน้า Technician
+          combinedData = combinedData
+              .where((inspection) =>
+                  inspection['tank_id'] != tankId ||
+                  inspection['date_checked'] != dateChecked ||
+                  inspection['time_checked'] != latestDoc['time_checked'])
+              .toList();
+        } else {
+          // ลบข้อมูลที่เกี่ยวข้องในหน้า UserView
+          combinedData = combinedData
+              .where((inspection) =>
+                  inspection['tank_id'] != tankId ||
+                  inspection['date_checked'] != dateChecked ||
+                  inspection['time_checked'] != latestDoc['time_checked'])
+              .toList();
+        }
       });
 
       debugPrint("ข้อมูลการตรวจสอบที่อัปเดตใหม่: $combinedData");
@@ -225,35 +224,68 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
           .get();
 
       if (remainingDocs.docs.isNotEmpty) {
-        var latestStatus = remainingDocs.docs.first['status'] ?? 'ไม่มีข้อมูล';
+        var doc = remainingDocs.docs.first;
 
-        // ✅ อัปเดต firetank_Collection ให้มีสถานะตรงกับเอกสารล่าสุด
+        // เลือกใช้ 'status' หรือ 'status_technician' ตามที่ต้องการ
+        var latestStatus = doc.data().containsKey('status')
+            ? doc['status']
+            : (doc.data().containsKey('status_technician')
+                ? doc['status_technician']
+                : 'ไม่มีข้อมูล');
+
+        // อัปเดตสถานะใน firetank_Collection
         var firetankDoc = await FirebaseFirestore.instance
             .collection('firetank_Collection')
             .where('tank_id', isEqualTo: tankId)
             .get();
 
         if (firetankDoc.docs.isNotEmpty) {
-          await firetankDoc.docs.first.reference.update({
-            'status': latestStatus, // อัปเดตสถานะใน firetank_Collection
-          });
+          // ถ้าเป็นหน้าช่างเทคนิค ให้ปรับอัปเดต `status_technician`
+          if (isTechnician) {
+            await firetankDoc.docs.first.reference.update({
+              'status_technician': latestStatus, // อัปเดตสถานะเฉพาะช่างเทคนิค
+            });
+          } else {
+            // ถ้าเป็นหน้าผู้ใช้ทั่วไป ให้ปรับอัปเดต `status`
+            await firetankDoc.docs.first.reference.update({
+              'status': latestStatus, // อัปเดตสถานะเฉพาะผู้ใช้ทั่วไป
+            });
+          }
 
           debugPrint(
               "สถานะใน firetank_Collection ได้รับการอัปเดตเป็น: $latestStatus");
+
+          // แสดงสถานะล่าสุดจาก form_checks
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('สถานะล่าสุดจาก form_checks: $latestStatus')));
         }
       } else {
-        // ❌ ถ้าไม่มีข้อมูลเหลือใน form_checks ให้รีเซ็ตสถานะเป็น 'ไม่มีข้อมูล'
-        var firetankDoc = await FirebaseFirestore.instance
-            .collection('firetank_Collection')
-            .where('tank_id', isEqualTo: tankId)
-            .get();
+        // เช็คว่าในกรณีที่ไม่มีข้อมูลใน form_checks และเป็นหน้าช่างเทคนิค
+        if (remainingDocs.docs.isEmpty) {
+          var firetankDoc = await FirebaseFirestore.instance
+              .collection('firetank_Collection')
+              .where('tank_id', isEqualTo: tankId)
+              .get();
 
-        if (firetankDoc.docs.isNotEmpty) {
-          await firetankDoc.docs.first.reference.update({
-            'status': 'ไม่มีข้อมูล', // หรือสถานะที่คุณต้องการ
-          });
+          if (firetankDoc.docs.isNotEmpty) {
+            // ถ้าเป็นหน้าช่างเทคนิค ให้รีเซ็ต `status_technician`
+            if (isTechnician) {
+              await firetankDoc.docs.first.reference.update({
+                'status_technician': 'ยังไม่ตรวจสอบ', // รีเซ็ตสถานะช่างเทคนิค
+              });
+            } else {
+              // ถ้าเป็นหน้าผู้ใช้ทั่วไป ให้รีเซ็ต `status`
+              await firetankDoc.docs.first.reference.update({
+                'status': 'ยังไม่ตรวจสอบ', // รีเซ็ตสถานะผู้ใช้ทั่วไป
+              });
+            }
+          }
+          debugPrint(
+              "สถานะใน firetank_Collection ได้รับการรีเซ็ตเป็น 'ยังไม่ตรวจสอบ'");
 
-          debugPrint("สถานะใน firetank_Collection ได้รับการรีเซ็ต");
+          // แสดงสถานะเป็นยังไม่ตรวจสอบ
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('ไม่มีข้อมูลใน form_checks')));
         }
       }
     } catch (e) {
@@ -403,7 +435,6 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
                                   'ตรวจสอบแล้ว',
                                   'ส่งซ่อม',
                                   'ชำรุด',
-                                  'ยังไม่ตรวจสอบ'
                                 ].map((status) {
                                   return DropdownMenuItem<String>(
                                     value: status,
