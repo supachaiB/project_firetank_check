@@ -295,11 +295,86 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
     }
   }
 
+  // ฟังก์ชันรีเซ็ตสถานะถังดับเพลิง
+  void resetStatus(String userType) async {
+    // กำหนดชื่อฟิลด์ที่ต้องการอัปเดตตามประเภทผู้ใช้
+    String fieldName =
+        userType == 'General User' ? 'status' : 'status_technician';
+
+    // ดึงข้อมูลทั้งหมดจาก firetank_Collection
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('firetank_Collection')
+        .get();
+
+    // ตรวจสอบข้อมูลใน snapshot
+    //print('Total documents: ${snapshot.docs.length}'); // ดูจำนวนเอกสารที่ดึงมา
+
+    for (var doc in snapshot.docs) {
+      /*print(
+          'Updating document with ID: ${doc.id}'); // ดู ID ของเอกสารที่กำลังอัปเดต*/
+
+      // อัปเดตฟิลด์ที่กำหนดในฐานข้อมูล
+      await FirebaseFirestore.instance
+          .collection('firetank_Collection')
+          .doc(doc.id)
+          .update({
+        fieldName: 'ยังไม่ตรวจสอบ', // อัปเดตสถานะ
+      }).then((_) {
+        //print('Document ${doc.id} updated successfully');
+      }).catchError((e) {
+        //print('Error updating document: $e');
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ประวัติการตรวจสอบ'),
+        title: const Text(
+          'ประวัติการตรวจสอบ',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.grey[700],
+        iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
+          TextButton(
+            onPressed: () {
+              resetStatus('General user'); // รีเซ็ตสถานะของ General user
+            },
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.refresh, color: Colors.white, // กำหนดให้เป็นสีขาว
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'รีเซ็ตสถานะผู้ใช้ทั่วไป',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ],
+            ),
+          ),
+
+// ปุ่มสำหรับ reset สถานะ Technician
+          TextButton(
+            onPressed: () {
+              resetStatus('Technician'); // รีเซ็ตสถานะของ Technician
+            },
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.refresh, color: Colors.white),
+                const SizedBox(width: 8),
+                Text(
+                  'รีเซ็ตสถานะช่างเทคนิค',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Center(

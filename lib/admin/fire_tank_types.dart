@@ -165,10 +165,16 @@ class _FireTankTypesState extends State<FireTankTypes> {
   }
 
   @override
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('จัดการประเภทถังดับเพลิง')),
+      appBar: AppBar(
+        title: Text(
+          'จัดการประเภทถังดับเพลิง',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.grey[700],
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
       body: StreamBuilder<QuerySnapshot>(
         stream: _fetchFireTankTypes(),
         builder: (context, snapshot) {

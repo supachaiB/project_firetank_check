@@ -114,7 +114,7 @@ class _FireTankManagementPageState extends State<FireTankManagementPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Fire Tank Management',
+          'การจัดการถังดับเพลิง',
           style: TextStyle(color: Colors.white), // เปลี่ยนสีข้อความเป็นสีขาว
         ),
         backgroundColor: Colors.grey[700],

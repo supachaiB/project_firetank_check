@@ -83,7 +83,9 @@ class _BuildingManagementScreenState extends State<BuildingManagementScreen> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text('แก้ไขข้อมูลอาคาร'),
+          title: Text(
+            'แก้ไขข้อมูลอาคาร',
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -141,7 +143,12 @@ class _BuildingManagementScreenState extends State<BuildingManagementScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Building Management'),
+        title: Text(
+          'การจัดการอาคาร',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.grey[700],
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -209,14 +216,14 @@ class _BuildingManagementScreenState extends State<BuildingManagementScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
-                              icon: Icon(Icons.edit),
+                              icon: Icon(Icons.edit, color: Colors.blue),
                               onPressed: () {
                                 _editBuilding(
                                     building['id']); // เรียกฟังก์ชันแก้ไข
                               },
                             ),
                             IconButton(
-                              icon: Icon(Icons.delete),
+                              icon: Icon(Icons.delete, color: Colors.red),
                               onPressed: () async {
                                 final buildingRef = FirebaseFirestore.instance
                                     .collection('buildings')
@@ -244,7 +251,9 @@ class _BuildingManagementScreenState extends State<BuildingManagementScreen> {
             _isFormVisible = !_isFormVisible;
           });
         },
-        child: Icon(_isFormVisible ? Icons.close : Icons.add),
+        backgroundColor: Colors.blueAccent,
+        child:
+            Icon(_isFormVisible ? Icons.close : Icons.add, color: Colors.white),
       ),
     );
   }
