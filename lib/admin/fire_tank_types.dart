@@ -187,7 +187,7 @@ class _FireTankTypesState extends State<FireTankTypes> {
 
           // ตรวจสอบขนาดหน้าจอ
           double screenWidth = MediaQuery.of(context).size.width;
-          int crossAxisCount = screenWidth > 600
+          int crossAxisCount = screenWidth > 900
               ? 4
               : 2; // ใช้ 4 คอลัมน์บนหน้าจอใหญ่ และ 2 คอลัมน์บนหน้าจอเล็ก
 
@@ -198,7 +198,9 @@ class _FireTankTypesState extends State<FireTankTypes> {
                 crossAxisCount: crossAxisCount,
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
-                childAspectRatio: 0.75,
+                childAspectRatio: screenWidth > 900
+                    ? 0.8
+                    : 0.75, // ปรับ childAspectRatio ให้เหมาะสม
               ),
               itemCount: snapshot.data!.docs.length,
               itemBuilder: (context, index) {
@@ -267,7 +269,7 @@ class _FireTankTypesState extends State<FireTankTypes> {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 40),
+                            const SizedBox(height: 10),
                           ],
                         ),
                       ),

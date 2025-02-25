@@ -299,7 +299,7 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
   void resetStatus(String userType) async {
     // กำหนดชื่อฟิลด์ที่ต้องการอัปเดตตามประเภทผู้ใช้
     String fieldName =
-        userType == 'General User' ? 'status' : 'status_technician';
+        userType == 'General User' ? 'status_technician' : 'status';
 
     // ดึงข้อมูลทั้งหมดจาก firetank_Collection
     QuerySnapshot snapshot = await FirebaseFirestore.instance
@@ -307,11 +307,11 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
         .get();
 
     // ตรวจสอบข้อมูลใน snapshot
-    //print('Total documents: ${snapshot.docs.length}'); // ดูจำนวนเอกสารที่ดึงมา
+    print('Total documents: ${snapshot.docs.length}'); // ดูจำนวนเอกสารที่ดึงมา
 
     for (var doc in snapshot.docs) {
-      /*print(
-          'Updating document with ID: ${doc.id}'); // ดู ID ของเอกสารที่กำลังอัปเดต*/
+      print(
+          'Updating document with ID: ${doc.id}'); // ดู ID ของเอกสารที่กำลังอัปเดต
 
       // อัปเดตฟิลด์ที่กำหนดในฐานข้อมูล
       await FirebaseFirestore.instance
@@ -360,7 +360,7 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
 // ปุ่มสำหรับ reset สถานะ Technician
           TextButton(
             onPressed: () {
-              resetStatus('Technician'); // รีเซ็ตสถานะของ Technician
+              resetStatus('General User'); // รีเซ็ตสถานะของ Technician
             },
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -384,8 +384,8 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
               crossAxisAlignment: CrossAxisAlignment.center, // จัดตำแหน่งกลาง
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment
-                      .spaceBetween, // เว้นระยะระหว่าง ScheduleBox และ ToggleButtons
+                  mainAxisAlignment:
+                      MainAxisAlignment.center, // ใช้เพื่อจัดตำแหน่งกลาง
                   children: [
                     Expanded(
                       // ให้ ScheduleBox ขยายพื้นที่ตามที่เหลือ
@@ -394,6 +394,28 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
                         remainingQuarterTime: remainingQuarterTimeInSeconds,
                       ),
                     ),
+
+                    // เพิ่ม Spacer() ก่อน StatusSummaryWidget
+                    Spacer(), // เพิ่มเพื่อให้ StatusSummaryWidget อยู่กลาง
+                    Offstage(
+                      offstage:
+                          !isUserView, // ซ่อน StatusSummaryWidget เมื่อเลือกเป็นช่างเทคนิค
+                      child: StatusSummaryWidget(
+                        totalTanks: totalTanks,
+                        checkedCount: checkedCount,
+                        brokenCount: brokenCount,
+                        repairCount: repairCount,
+                      ),
+                    ),
+
+                    // เพิ่ม Spacer() ก่อน StatusSummaryTech
+                    Spacer(), // เพิ่มเพื่อให้ StatusSummaryTech อยู่กลาง
+                    Offstage(
+                      offstage:
+                          isUserView, // ซ่อน StatusSummaryTech เมื่อเลือกเป็นผู้ใช้ทั่วไป
+                      child: StatusSummaryTech(),
+                    ),
+
                     ToggleButtons(
                       isSelected: [isUserView, isTechnician],
                       onPressed: (index) {
@@ -414,25 +436,6 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
                     ),
                   ],
                 ),
-
-                // สลับการแสดงระหว่าง StatusSummaryWidget และ StatusSummaryTech
-                Offstage(
-                  offstage:
-                      !isUserView, // ซ่อน StatusSummaryWidget เมื่อเลือกเป็นช่างเทคนิค
-                  child: StatusSummaryWidget(
-                    totalTanks: totalTanks,
-                    checkedCount: checkedCount,
-                    brokenCount: brokenCount,
-                    repairCount: repairCount,
-                  ),
-                ),
-
-                Offstage(
-                  offstage:
-                      isUserView, // ซ่อน StatusSummaryTech เมื่อเลือกเป็นผู้ใช้ทั่วไป
-                  child: StatusSummaryTech(),
-                ),
-                const SizedBox(height: 5),
 
                 // ส่วนตัวกรอง
                 Card(
@@ -493,15 +496,8 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
                                     .toList(),
                               ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 5),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            SizedBox(
-                              width: MediaQuery.of(context).size.width *
-                                  0.5, // ให้ Dropdown กว้างครึ่งหนึ่งของหน้าจอ
+                            const SizedBox(width: 5),
+                            Expanded(
                               child: DropdownButton<String>(
                                 value: selectedStatus,
                                 isExpanded: true,
@@ -510,6 +506,7 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
                                   'ตรวจสอบแล้ว',
                                   'ส่งซ่อม',
                                   'ชำรุด',
+                                  'ยังไม่ตรวจสอบ',
                                 ].map((status) {
                                   return DropdownMenuItem<String>(
                                     value: status,
@@ -523,6 +520,12 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
                                 },
                               ),
                             ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
                             const SizedBox(
                                 width:
                                     10), // เพิ่มช่องว่างระหว่าง Dropdown กับปุ่ม
@@ -531,6 +534,8 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
                                 setState(() {
                                   selectedBuilding = null;
                                   selectedFloor = null;
+                                  selectedStatus =
+                                      null; // รีเซ็ตสถานะการตรวจสอบ
                                 });
                               },
                               style: ElevatedButton.styleFrom(
@@ -544,7 +549,7 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 5),
+                        const SizedBox(height: 8),
                       ],
                     ),
                   ),

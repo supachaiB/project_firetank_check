@@ -185,7 +185,6 @@ class _BuildingManagementScreenState extends State<BuildingManagementScreen> {
                 ],
               ),
             ),
-            SizedBox(height: 20),
             Expanded(
               child: StreamBuilder<List<Map<String, dynamic>>>(
                 stream: _getBuildings(),
@@ -204,40 +203,52 @@ class _BuildingManagementScreenState extends State<BuildingManagementScreen> {
                   }
 
                   List<Map<String, dynamic>> buildings = snapshot.data!;
-                  return ListView.builder(
-                    itemCount: buildings.length,
-                    itemBuilder: (context, index) {
-                      final building = buildings[index];
-                      return ListTile(
-                        title: Text(building['name']),
-                        subtitle: Text(
-                            'จำนวนทั้งหมด: ${building['totalFloors']} ชั้น'),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: Icon(Icons.edit, color: Colors.blue),
-                              onPressed: () {
-                                _editBuilding(
-                                    building['id']); // เรียกฟังก์ชันแก้ไข
+                  return CustomScrollView(
+                    slivers: [
+                      SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final building = buildings[index];
+                            return ListTile(
+                              title: Text(building['name']),
+                              subtitle: Text(
+                                  'จำนวนทั้งหมด: ${building['totalFloors']} ชั้น'),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(Icons.edit, color: Colors.blue),
+                                    onPressed: () {
+                                      _editBuilding(
+                                          building['id']); // เรียกฟังก์ชันแก้ไข
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: Icon(Icons.delete, color: Colors.red),
+                                    onPressed: () async {
+                                      final buildingRef = FirebaseFirestore
+                                          .instance
+                                          .collection('buildings')
+                                          .doc(building['id']);
+                                      await buildingRef.delete();
+                                    },
+                                  ),
+                                ],
+                              ),
+                              onTap: () {
+                                _editBuilding(building['id']);
                               },
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.delete, color: Colors.red),
-                              onPressed: () async {
-                                final buildingRef = FirebaseFirestore.instance
-                                    .collection('buildings')
-                                    .doc(building['id']);
-                                await buildingRef.delete();
-                              },
-                            ),
-                          ],
+                            );
+                          },
+                          childCount: buildings.length,
                         ),
-                        onTap: () {
-                          _editBuilding(building['id']);
-                        },
-                      );
-                    },
+                      ),
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: SizedBox(
+                            height: 60), // เพิ่มช่องว่าง 40 ด้านล่างสุด
+                      ),
+                    ],
                   );
                 },
               ),

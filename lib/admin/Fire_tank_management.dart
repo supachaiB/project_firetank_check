@@ -283,15 +283,20 @@ class _FireTankManagementPageState extends State<FireTankManagementPage> {
                   }
 
                   return ListView.builder(
-                    itemCount: tanks.length,
+                    itemCount:
+                        tanks.length + 1, // เพิ่ม 1 เพื่อให้มีช่องว่างสุดท้าย
                     itemBuilder: (context, index) {
-                      // เรียงลำดับ tanks ตาม tank_id โดยการแปลงเป็นตัวเลข
+                      if (index == tanks.length) {
+                        // เพิ่มช่องว่างที่ด้านล่างสุด
+                        return SizedBox(
+                            height: 80); // ปรับขนาดช่องว่างตามต้องการ
+                      }
+
+                      // ฟังก์ชั่นการเรียงลำดับ
                       tanks.sort((a, b) {
-                        final idA = a['tank_id'].replaceAll(
-                            RegExp(r'\D'), ''); // ดึงตัวเลขออกจาก tank_id
+                        final idA = a['tank_id'].replaceAll(RegExp(r'\D'), '');
                         final idB = b['tank_id'].replaceAll(RegExp(r'\D'), '');
-                        return int.parse(idA)
-                            .compareTo(int.parse(idB)); // เปรียบเทียบตัวเลข
+                        return int.parse(idA).compareTo(int.parse(idB));
                       });
 
                       final tank = tanks[index];
@@ -366,8 +371,6 @@ class _FireTankManagementPageState extends State<FireTankManagementPage> {
         child: const Icon(Icons.add, color: Colors.white),
         backgroundColor: Colors.blueAccent,
       ),
-      floatingActionButtonLocation:
-          FloatingActionButtonLocation.centerDocked, // ทำให้ปุ่มอยู่ตรงกลางล่าง
     );
   }
 }

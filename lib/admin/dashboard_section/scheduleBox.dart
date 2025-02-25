@@ -36,12 +36,12 @@ class ScheduleBox extends StatelessWidget {
               Text(
                 "กำหนดการตรวจ",
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: Colors.redAccent,
                 ),
               ),
-              SizedBox(height: 4),
+              SizedBox(height: 2),
               Text(
                 "ผู้ใช้ทั่วไปเหลือ :  $days วัน $quarterHours ชั่วโมง",
                 style: TextStyle(fontSize: 14),
