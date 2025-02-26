@@ -28,6 +28,7 @@ class ScheduleBox extends StatelessWidget {
       alignment: Alignment.centerLeft, // จัดชิดซ้าย
       child: Card(
         elevation: 2,
+        color: Colors.white, // เปลี่ยนพื้นหลังเป็นสีขาว
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Column(

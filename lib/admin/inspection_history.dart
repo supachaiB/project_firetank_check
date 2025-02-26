@@ -90,15 +90,36 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
   }
 
   Future<void> fetchBuildings() async {
-    final snapshot = await FirebaseFirestore.instance
-        .collection('firetank_Collection')
-        .get();
-    final buildings =
-        snapshot.docs.map((doc) => doc['building'] as String).toSet().toList();
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('firetank_Collection')
+          .get();
 
-    setState(() {
-      _buildings = buildings;
-    });
+      if (snapshot.docs.isEmpty) {
+        print('ไม่มีข้อมูลใน collection firetank_Collection');
+        return;
+      }
+
+      final buildings = snapshot.docs
+          .where((doc) => doc
+              .data()
+              .containsKey('building')) // ตรวจสอบว่ามีฟิลด์ 'building'
+          .map((doc) => doc['building'] as String)
+          .toSet()
+          .toList();
+
+      setState(() {
+        _buildings = buildings;
+      });
+    } catch (e) {
+      print('เกิดข้อผิดพลาดในการดึงข้อมูล: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('เกิดข้อผิดพลาดในการดึงข้อมูลจาก Firestore'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   /// ดึงรายชื่อชั้นของอาคารที่เลือก
@@ -299,7 +320,7 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
   void resetStatus(String userType) async {
     // กำหนดชื่อฟิลด์ที่ต้องการอัปเดตตามประเภทผู้ใช้
     String fieldName =
-        userType == 'General User' ? 'status_technician' : 'status';
+        userType == 'General User' ? 'status' : 'status_technician';
 
     // ดึงข้อมูลทั้งหมดจาก firetank_Collection
     QuerySnapshot snapshot = await FirebaseFirestore.instance
@@ -307,11 +328,10 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
         .get();
 
     // ตรวจสอบข้อมูลใน snapshot
-    print('Total documents: ${snapshot.docs.length}'); // ดูจำนวนเอกสารที่ดึงมา
+    //print('Total documents: ${snapshot.docs.length}'); // ดูจำนวนเอกสารที่ดึงมา
 
     for (var doc in snapshot.docs) {
-      print(
-          'Updating document with ID: ${doc.id}'); // ดู ID ของเอกสารที่กำลังอัปเดต
+      //print('Updating document with ID: ${doc.id}'); // ดู ID ของเอกสารที่กำลังอัปเดต
 
       // อัปเดตฟิลด์ที่กำหนดในฐานข้อมูล
       await FirebaseFirestore.instance
@@ -340,7 +360,7 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
         actions: [
           TextButton(
             onPressed: () {
-              resetStatus('General user'); // รีเซ็ตสถานะของ General user
+              resetStatus('General User'); // รีเซ็ตสถานะของ General user
             },
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -360,7 +380,7 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
 // ปุ่มสำหรับ reset สถานะ Technician
           TextButton(
             onPressed: () {
-              resetStatus('General User'); // รีเซ็ตสถานะของ Technician
+              resetStatus('Technician'); // รีเซ็ตสถานะของ Technician
             },
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -440,6 +460,8 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
                 // ส่วนตัวกรอง
                 Card(
                   margin: const EdgeInsets.only(bottom: 20),
+                  color: Colors.white, // เปลี่ยนพื้นหลังเป็นสีขาว
+
                   elevation: 3,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),

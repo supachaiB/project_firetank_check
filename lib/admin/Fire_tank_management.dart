@@ -45,15 +45,32 @@ class _FireTankManagementPageState extends State<FireTankManagementPage> {
   }
 
   Future<void> fetchBuildings() async {
-    final snapshot = await FirebaseFirestore.instance
-        .collection('firetank_Collection')
-        .get();
-    final buildings =
-        snapshot.docs.map((doc) => doc['building'] as String).toSet().toList();
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('firetank_Collection')
+          .get();
 
-    setState(() {
-      _buildings = buildings;
-    });
+      // ตรวจสอบว่าเอกสารมีฟิลด์ 'building' หรือไม่
+      final buildings = snapshot.docs
+          .where((doc) => doc
+              .data()
+              .containsKey('building')) // ตรวจสอบว่าเอกสารมีฟิลด์ 'building'
+          .map((doc) => doc['building'] as String)
+          .toSet()
+          .toList();
+
+      setState(() {
+        _buildings = buildings;
+      });
+    } catch (e) {
+      print('เกิดข้อผิดพลาดในการดึงข้อมูล: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('เกิดข้อผิดพลาดในการดึงข้อมูลจาก Firestore'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   /// ดึงรายชื่อชั้นของอาคารที่เลือก
@@ -270,10 +287,15 @@ class _FireTankManagementPageState extends State<FireTankManagementPage> {
 
                   // ฟิลเตอร์ Tank ID หลังจากดึงข้อมูลจาก Firebase
                   final tanks = snapshot.data!.docs.where((doc) {
-                    final tankId = (doc['tank_id'] as String)
-                        .toLowerCase(); // แปลงเป็นพิมพ์เล็ก
-                    return tankId.contains(
-                        _searchTankId.toLowerCase()); // ค้นหาแบบไม่สนตัวพิมพ์
+                    final data = doc.data()
+                        as Map<String, dynamic>; // ตรวจสอบว่าเป็น Map
+                    if (data.containsKey('tank_id')) {
+                      final tankId = (data['tank_id'] as String)
+                          .toLowerCase(); // แปลงเป็นพิมพ์เล็ก
+                      return tankId.contains(
+                          _searchTankId.toLowerCase()); // ค้นหาแบบไม่สนตัวพิมพ์
+                    }
+                    return false;
                   }).toList();
 
                   if (tanks.isEmpty) {

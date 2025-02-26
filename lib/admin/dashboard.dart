@@ -127,6 +127,7 @@ class _DashboardPageState extends State<DashboardPage> {
         (uncheckedTechnicianCount / totalTechnicianStatus) * 100;
 
     return Scaffold(
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: const Text(
           'Dashboard',
@@ -151,7 +152,56 @@ class _DashboardPageState extends State<DashboardPage> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // กล่อง 1 (ข้อมูลสถานะทั้งหมด)
+                // กล่องใหม่ (ถังดับเพลิงทั้งหมด)
+                Expanded(
+                  child: SizedBox(
+                    height: 200,
+                    child: Container(
+                      padding: const EdgeInsets.all(12.0),
+                      decoration: boxDecorationStyle(),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.fire_extinguisher, // ไอคอนถังดับเพลิง
+                                size: 24, // ขนาดของไอคอน
+                                color: Colors.blue, // สีของไอคอน
+                              ),
+                              const SizedBox(
+                                  width: 8), // ระยะห่างระหว่างไอคอนกับข้อความ
+                              const Text(
+                                'ถังดับเพลิงทั้งหมด',
+                                style: TextStyle(
+                                  fontSize: 16, // ข้อความใหญ่ขึ้น
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 5),
+                          Expanded(
+                            child: Center(
+                              child: Text(
+                                '$totalTanks',
+                                style: TextStyle(
+                                  fontSize: 40, // ขนาดของเลข
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 16),
+
+                // กล่อง  (ข้อมูลสถานะทั้งหมด)
                 Expanded(
                   child: SizedBox(
                     height: 200,
@@ -168,11 +218,62 @@ class _DashboardPageState extends State<DashboardPage> {
                                 fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 5),
-                          Text('ถังทั้งหมด: $totalTanks'),
-                          Text('ตรวจสอบแล้ว: $checkedCount'),
-                          Text('ยังไม่ตรวจสอบ: $uncheckedCount'),
-                          Text('ชำรุด: $brokenCount'),
-                          Text('ส่งซ่อม: $repairCount'),
+                          Row(
+                            children: [
+                              Container(
+                                width: 10,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                  color: Colors.green, // สีของตรวจสอบแล้ว
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              Text('ตรวจสอบแล้ว: $checkedCount'),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Container(
+                                width: 10,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey, // สีของยังไม่ตรวจสอบ
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              Text('ยังไม่ตรวจสอบ: $uncheckedCount'),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Container(
+                                width: 10,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                  color: Colors.red, // สีของชำรุด
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              Text('ชำรุด: $brokenCount'),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Container(
+                                width: 10,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                  color: Colors.orange, // สีของส่งซ่อม
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              Text('ส่งซ่อม: $repairCount'),
+                            ],
+                          ),
                         ],
                       ),
                     ),
@@ -180,7 +281,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
                 const SizedBox(width: 16),
 
-                // กล่อง 2 (ข้อมูลจาก status_technician)
+// กล่อง  (ข้อมูลจาก status_technician)
                 Expanded(
                   child: SizedBox(
                     height: 200,
@@ -197,16 +298,68 @@ class _DashboardPageState extends State<DashboardPage> {
                                 fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 5),
-                          Text('ถังทั้งหมด: $totalTanks'),
-                          Text('ตรวจสอบแล้ว: $checkedTechnicianCount'),
-                          Text('ยังไม่ตรวจสอบ: $uncheckedTechnicianCount'),
-                          Text('ชำรุด: $brokenTechnicianCount'),
-                          Text('ส่งซ่อม: $repairTechnicianCount'),
+                          Row(
+                            children: [
+                              Container(
+                                width: 10,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                  color: Colors.green, // สีของตรวจสอบแล้ว
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              Text('ตรวจสอบแล้ว: $checkedTechnicianCount'),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Container(
+                                width: 10,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey, // สีของยังไม่ตรวจสอบ
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              Text('ยังไม่ตรวจสอบ: $uncheckedTechnicianCount'),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Container(
+                                width: 10,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                  color: Colors.red, // สีของชำรุด
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              Text('ชำรุด: $brokenTechnicianCount'),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Container(
+                                width: 10,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                  color: Colors.orange, // สีของส่งซ่อม
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              Text('ส่งซ่อม: $repairTechnicianCount'),
+                            ],
+                          ),
                         ],
                       ),
                     ),
                   ),
                 ),
+
                 const SizedBox(width: 16),
 
                 // กล่อง 3 (ข้อมูลการชำรุด) - มี ScrollView
@@ -389,14 +542,8 @@ class _DashboardPageState extends State<DashboardPage> {
 BoxDecoration boxDecorationStyle() {
   return BoxDecoration(
     color: Colors.white,
-    borderRadius: BorderRadius.circular(10),
-    boxShadow: [
-      BoxShadow(
-        color: Colors.black12,
-        blurRadius: 5,
-        spreadRadius: 2,
-      ),
-    ],
+    border: Border.all(color: Colors.grey[350]!, width: 1.5), // ขอบสีเทา
+    borderRadius: BorderRadius.circular(8), // มุมโค้ง
   );
 }
 
