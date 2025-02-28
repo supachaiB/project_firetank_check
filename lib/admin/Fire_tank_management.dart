@@ -211,6 +211,23 @@ class _FireTankManagementPageState extends State<FireTankManagementPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
+                // ช่องค้นหา Tank ID
+                Flexible(
+                  child: TextField(
+                    onChanged: (value) {
+                      setState(() {
+                        _searchTankId = value;
+                      });
+                    },
+                    decoration: const InputDecoration(
+                      labelText: 'ค้นหาจาก Tank ID',
+                      border: OutlineInputBorder(),
+                      contentPadding:
+                          EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
                 ElevatedButton(
                   onPressed: () {
                     setState(() {
@@ -233,21 +250,78 @@ class _FireTankManagementPageState extends State<FireTankManagementPage> {
             ),
             const SizedBox(height: 10),
 
-            // ช่องค้นหา Tank ID
-            TextField(
-              onChanged: (value) {
-                setState(() {
-                  _searchTankId = value;
-                });
+            // **ข้อมูลจำนวนถัง**
+            StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('firetank_Collection')
+                  .where(
+                    'building',
+                    isEqualTo:
+                        _selectedBuilding == null || _selectedBuilding!.isEmpty
+                            ? null
+                            : _selectedBuilding,
+                  )
+                  .where(
+                    'floor',
+                    isEqualTo: _selectedFloor == null || _selectedFloor!.isEmpty
+                        ? null
+                        : _selectedFloor,
+                  )
+                  .where(
+                    'type',
+                    isEqualTo: _selectedType == null || _selectedType!.isEmpty
+                        ? null
+                        : _selectedType,
+                  )
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Center(
+                      child: Text('กรุณากรองข้อมูลหรือค้นหาใหม่'));
+                }
+
+                // ตัวแปรเก็บจำนวนถังทั้งหมด
+                int totalTanks = snapshot.data!.docs.length;
+                int expiredTanks = 0;
+                int nonExpiredTanks = 0;
+
+                // คำนวณถังที่หมดอายุและยังไม่หมดอายุ
+                for (var doc in snapshot.data!.docs) {
+                  final data = doc.data() as Map<String, dynamic>;
+                  final installationDate =
+                      (data['installation_date'] as Timestamp).toDate();
+                  final expirationYears = data['expiration_years'];
+
+                  final expirationDate = installationDate
+                      .add(Duration(days: expirationYears * 365));
+                  final currentDate = DateTime.now();
+
+                  if (expirationDate.isBefore(currentDate)) {
+                    expiredTanks++;
+                  } else {
+                    nonExpiredTanks++;
+                  }
+                }
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('ถังดับเพลิงทั้งหมด: $totalTanks'),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text('ถังที่หมดอายุ: $expiredTanks'),
+                        SizedBox(height: 5),
+                        Text('ถังที่ยังไม่หมดอายุ: $nonExpiredTanks'),
+                      ],
+                    ),
+                  ],
+                );
               },
-              decoration: const InputDecoration(
-                labelText: 'ค้นหาจาก Tank ID',
-                border: OutlineInputBorder(),
-                contentPadding:
-                    EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-              ),
             ),
-            const SizedBox(height: 10),
             // แสดงข้อมูลถังดับเพลิง
             Expanded(
               child: StreamBuilder<QuerySnapshot>(
@@ -407,6 +481,8 @@ class FireTankFormPage extends StatefulWidget {
 class _FireTankFormPageState extends State<FireTankFormPage> {
   final TextEditingController _fireExtinguisherIdController =
       TextEditingController();
+  final TextEditingController _expirationYearsController =
+      TextEditingController(text: '5');
   String? _type; // ตัวแปร _type อาจจะเป็น String
   String? _building;
   String? _floor;
@@ -541,14 +617,18 @@ class _FireTankFormPageState extends State<FireTankFormPage> {
       final newId = _fireExtinguisherIdController.text;
 
       // แสดงค่าตัวแปรที่ใช้ในการบันทึกข้อมูล
-      print('newId: $newId');
+      /*print('newId: $newId');
       print('type: $_type');
       print('building: $_building');
       print('floor: $_floor');
       print('installationDate: $_installationDate');
+      print('expirationYearsController $_expirationYearsController');*/
 
       //กรอกให้ครบ
-      if (_type == null || _building == null || _floor == null) {
+      if (_type == null ||
+          _building == null ||
+          _floor == null ||
+          _expirationYearsController.text.isEmpty) {
         print('ข้อมูลไม่ครบ');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('กรุณากรอกข้อมูลให้ครบถ้วน')),
@@ -570,6 +650,9 @@ class _FireTankFormPageState extends State<FireTankFormPage> {
           'status': 'ยังไม่ตรวจสอบ',
           'status_technician': 'ยังไม่ตรวจสอบ', // เพิ่มฟิลด์ status_technician
           'installation_date': _installationDate,
+          'expiration_years': int.tryParse(_expirationYearsController.text) ??
+              5, // แปลงเป็น int
+
           'qrcode': _qrCode,
         });
 
@@ -656,35 +739,58 @@ class _FireTankFormPageState extends State<FireTankFormPage> {
               ),
             ),
             const SizedBox(height: 10),
-            DropdownButton<String>(
+            SizedBox(
+              width: double.infinity,
+              child: TextField(
+                controller: _expirationYearsController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'วันหมดอายุถังดับเพลิง',
+                  border: OutlineInputBorder(),
+                  suffixText: 'ปี',
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            DropdownButtonFormField<String>(
               value: _building,
-              hint: const Text('เลือกอาคาร'),
-              onChanged: (String? newValue) {
+              onChanged: (value) {
                 setState(() {
-                  _building = newValue;
-                  _fetchTotalFloors(newValue!);
+                  _building = value;
+                  _fetchTotalFloors(value!);
                 });
               },
               items: _buildingList.map((String value) {
                 return DropdownMenuItem<String>(
-                    value: value, child: Text(value));
+                  value: value,
+                  child: Text(value),
+                );
               }).toList(),
+              decoration: const InputDecoration(
+                labelText: 'เลือกอาคาร',
+                border: OutlineInputBorder(),
+              ),
             ),
             const SizedBox(height: 10),
             if (_building != null)
-              DropdownButton<String>(
+              DropdownButtonFormField<String>(
                 value: _floor,
-                hint: const Text('เลือกชั้น'),
-                onChanged: (String? newValue) {
+                onChanged: (value) {
                   setState(() {
-                    _floor = newValue;
+                    _floor = value;
                   });
                 },
                 items: List.generate(_totalFloors, (index) => '${index + 1}')
                     .map((String value) {
                   return DropdownMenuItem<String>(
-                      value: value, child: Text(value));
+                    value: value,
+                    child: Text(value),
+                  );
                 }).toList(),
+                decoration: const InputDecoration(
+                  labelText: 'เลือกชั้น',
+                  border: OutlineInputBorder(),
+                ),
               ),
             const SizedBox(height: 20),
             SizedBox(
@@ -728,6 +834,29 @@ class FireTankDetailPage extends StatelessWidget {
     // แปลงวันที่เป็นรูปแบบ "วัน/เดือน/ปี เวลา"
     final formattedDate = DateFormat('dd/MM/yyyy ').format(installationDate);
 
+    // คำนวณวันที่หมดอายุจากวันที่ติดตั้งและปีหมดอายุ (expiration_years)
+    final expirationYears = tank['expiration_years'] ??
+        5; // ถ้าไม่มีข้อมูลจะใช้ค่า 5 ปีเป็นค่าเริ่มต้น
+    final expirationDate = installationDate.add(Duration(
+        days: 365 *
+            (expirationYears as int))); // ใช้ as int เพื่อบังคับแปลงเป็น int
+
+    // ตรวจสอบว่าเวลาที่ปัจจุบันผ่านวันที่หมดอายุหรือยัง
+    final DateTime currentDate = DateTime.now();
+    int remainingYears = expirationYears;
+
+    if (currentDate.isAfter(expirationDate)) {
+      // ถ้าผ่านวันที่หมดอายุแล้ว ลดค่า expirationYears
+      remainingYears =
+          expirationYears - (currentDate.year - expirationDate.year);
+      // ตรวจสอบว่าเหลือปีที่ติดลบไหม ถ้าเหลือให้น้อยกว่าศูนย์ให้เป็น 0
+      remainingYears = remainingYears < 0 ? 0 : remainingYears;
+    }
+
+    // แปลงวันหมดอายุเป็นรูปแบบ "วัน/เดือน/ปี"
+    final formattedExpirationDate =
+        DateFormat('dd/MM/yyyy').format(expirationDate);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -763,6 +892,14 @@ class FireTankDetailPage extends StatelessWidget {
             const SizedBox(height: 10),
             // แสดงวันที่ติดตั้ง
             Text('วันที่ติดตั้ง: $formattedDate'),
+            const SizedBox(height: 10),
+
+            // แสดงวันที่หมดอายุ
+            Text(
+              'หมดอายุถัง: $formattedExpirationDate ($remainingYears  ปี)',
+              style: const TextStyle(
+                  fontSize: 16, color: Colors.red), // แสดงวันที่หมดอายุในสีแดง
+            ),
 
             // แสดง QR Code และลิงก์ที่คลิกได้
             if (tank['qrcode'] != null)
