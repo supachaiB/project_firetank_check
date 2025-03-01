@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart'; // เพิ่มการ import
+import 'inspection_status_box.dart';
 
-class DamageInfoSection extends StatelessWidget {
+class TechnicianStatusBox extends StatelessWidget {
   final int checkedCount, uncheckedCount, brokenCount, repairCount;
-  const DamageInfoSection({
+  const TechnicianStatusBox({
     Key? key,
     required this.checkedCount,
     required this.uncheckedCount,
@@ -14,7 +13,7 @@ class DamageInfoSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DamageInfoSection(
+    return InspectionStatusBox(
       checkedCount: checkedCount,
       uncheckedCount: uncheckedCount,
       brokenCount: brokenCount,

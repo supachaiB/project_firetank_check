@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:firecheck_setup/admin/dashboard_section/damage_info_section.dart';
-//import 'package:firecheck_setup/admin/dashboard_section/status_summary.dart';
-import 'package:firecheck_setup/admin/dashboard_section/scheduleBox.dart';
+//import 'package:firecheck_setup/admin/dashboard_section/damage_info_section.dart';
+import 'package:firecheck_setup/admin/inspection_section/scheduleBox.dart';
 import 'package:firecheck_setup/admin/fire_tank_status.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fl_chart/fl_chart.dart';
+
+import 'package:firecheck_setup/admin/dashboard_section/fire_tank_box.dart';
+import 'package:firecheck_setup/admin/dashboard_section/inspection_status_box.dart';
+import 'package:firecheck_setup/admin/dashboard_section/technician_status_box.dart';
+//import 'package:firecheck_setup/admin/dashboard_section/damage_info_section.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -150,387 +154,242 @@ class _DashboardPageState extends State<DashboardPage> {
 
             // แถวของ 3 กล่อง
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // กล่องใหม่ (ถังดับเพลิงทั้งหมด)
+                // ใช้ LayoutBuilder เพื่อปรับการแสดงผลตามขนาดหน้าจอ
                 Expanded(
-                  child: SizedBox(
-                    height: 200,
-                    child: Container(
-                      padding: const EdgeInsets.all(12.0),
-                      decoration: boxDecorationStyle(),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 10),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.fire_extinguisher, // ไอคอนถังดับเพลิง
-                                size: 24, // ขนาดของไอคอน
-                                color: Colors.blue, // สีของไอคอน
-                              ),
-                              const SizedBox(
-                                  width: 8), // ระยะห่างระหว่างไอคอนกับข้อความ
-                              const Text(
-                                'ถังดับเพลิงทั้งหมด',
-                                style: TextStyle(
-                                  fontSize: 16, // ข้อความใหญ่ขึ้น
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 5),
-                          Expanded(
-                            child: Center(
-                              child: Text(
-                                '$totalTanks',
-                                style: TextStyle(
-                                  fontSize: 40, // ขนาดของเลข
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      // หากความกว้างของหน้าจอน้อยกว่า 600px ให้ใช้ Column แทน Row
+                      if (constraints.maxWidth < 600) {
+                        return Column(
+                          children: [
+                            FireTankBox(totalTanks: totalTanks),
+                            const SizedBox(height: 16),
+                            InspectionStatusBox(
+                              checkedCount: checkedCount,
+                              uncheckedCount: uncheckedCount,
+                              brokenCount: brokenCount,
+                              repairCount: repairCount,
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(width: 16),
-
-                // กล่อง  (ข้อมูลสถานะทั้งหมด)
-                Expanded(
-                  child: SizedBox(
-                    height: 200,
-                    child: Container(
-                      padding: const EdgeInsets.all(12.0),
-                      decoration: boxDecorationStyle(),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 10),
-                          const Text(
-                            'การตรวจสอบ(ผู้ใช้ทั่วไป)',
-                            style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 5),
-                          Row(
-                            children: [
-                              Container(
-                                width: 10,
-                                height: 10,
-                                decoration: BoxDecoration(
-                                  color: Colors.green, // สีของตรวจสอบแล้ว
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 5),
-                              Text('ตรวจสอบแล้ว: $checkedCount'),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Container(
-                                width: 10,
-                                height: 10,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey, // สีของยังไม่ตรวจสอบ
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 5),
-                              Text('ยังไม่ตรวจสอบ: $uncheckedCount'),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Container(
-                                width: 10,
-                                height: 10,
-                                decoration: BoxDecoration(
-                                  color: Colors.red, // สีของชำรุด
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 5),
-                              Text('ชำรุด: $brokenCount'),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Container(
-                                width: 10,
-                                height: 10,
-                                decoration: BoxDecoration(
-                                  color: Colors.orange, // สีของส่งซ่อม
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 5),
-                              Text('ส่งซ่อม: $repairCount'),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-
-// กล่อง  (ข้อมูลจาก status_technician)
-                Expanded(
-                  child: SizedBox(
-                    height: 200,
-                    child: Container(
-                      padding: const EdgeInsets.all(12.0),
-                      decoration: boxDecorationStyle(),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 10),
-                          const Text(
-                            'การตรวจสอบ(ช่างเทคนิค)',
-                            style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 5),
-                          Row(
-                            children: [
-                              Container(
-                                width: 10,
-                                height: 10,
-                                decoration: BoxDecoration(
-                                  color: Colors.green, // สีของตรวจสอบแล้ว
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 5),
-                              Text('ตรวจสอบแล้ว: $checkedTechnicianCount'),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Container(
-                                width: 10,
-                                height: 10,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey, // สีของยังไม่ตรวจสอบ
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 5),
-                              Text('ยังไม่ตรวจสอบ: $uncheckedTechnicianCount'),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Container(
-                                width: 10,
-                                height: 10,
-                                decoration: BoxDecoration(
-                                  color: Colors.red, // สีของชำรุด
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 5),
-                              Text('ชำรุด: $brokenTechnicianCount'),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Container(
-                                width: 10,
-                                height: 10,
-                                decoration: BoxDecoration(
-                                  color: Colors.orange, // สีของส่งซ่อม
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 5),
-                              Text('ส่งซ่อม: $repairTechnicianCount'),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(width: 16),
-
-                // กล่อง 3 (ข้อมูลการชำรุด) - มี ScrollView
-                Expanded(
-                  child: SizedBox(
-                    height: 200, // ความสูงเท่ากัน
-                    child: Container(
-                      padding: const EdgeInsets.all(12.0),
-                      decoration: boxDecorationStyle(),
-                      child: Scrollbar(
-                        child: SingleChildScrollView(
-                          child: DamageInfoSection(),
-                        ),
-                      ),
-                    ),
+                            const SizedBox(height: 16),
+                            TechnicianStatusBox(
+                              checkedCount: checkedTechnicianCount,
+                              uncheckedCount: uncheckedTechnicianCount,
+                              brokenCount: brokenTechnicianCount,
+                              repairCount: repairTechnicianCount,
+                            ),
+                          ],
+                        );
+                      } else {
+                        // ถ้าหน้าจอมีขนาดกว้างกว่า 600px ให้ใช้ Row เหมือนเดิม
+                        return Row(
+                          children: [
+                            Expanded(
+                                child: FireTankBox(totalTanks: totalTanks)),
+                            const SizedBox(width: 16),
+                            Expanded(
+                                child: InspectionStatusBox(
+                              checkedCount: checkedCount,
+                              uncheckedCount: uncheckedCount,
+                              brokenCount: brokenCount,
+                              repairCount: repairCount,
+                            )),
+                            const SizedBox(width: 16),
+                            Expanded(
+                                child: TechnicianStatusBox(
+                              checkedCount: checkedTechnicianCount,
+                              uncheckedCount: uncheckedTechnicianCount,
+                              brokenCount: brokenTechnicianCount,
+                              repairCount: repairTechnicianCount,
+                            )),
+                            const SizedBox(width: 16),
+                          ],
+                        );
+                      }
+                    },
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 20),
 
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // กล่อง 3 (ข้อมูลจาก status)
-                Expanded(
-                  child: SizedBox(
-                    height: 300,
-                    child: Container(
-                      padding: const EdgeInsets.all(12.0),
-                      decoration: boxDecorationStyle(),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'สถานะการตรวจสอบ (ผู้ใช้ทั่วไป)',
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 10),
-                          Flexible(
-                            child: PieChart(
-                              PieChartData(
-                                sections: [
-                                  PieChartSectionData(
-                                    value: checkedCount.toDouble(),
-                                    title:
-                                        '${checkedPercentage.toStringAsFixed(1)}%',
-                                    color: Colors.green,
-                                    radius: 50,
+            const SizedBox(height: 16),
+
+            // กล่อง  (ข้อมูลสถานะทั้งหมด)
+            /*   */
+
+            LayoutBuilder(
+              builder: (context, constraints) {
+                bool isSmallScreen =
+                    constraints.maxWidth < 600; // ปรับตามขนาดหน้าจอที่ต้องการ
+                return Column(
+                  children: [
+                    Wrap(
+                      spacing: 16,
+                      runSpacing: 16,
+                      alignment: WrapAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: isSmallScreen
+                              ? constraints.maxWidth
+                              : constraints.maxWidth / 2 - 16,
+                          child: Container(
+                            padding: const EdgeInsets.all(12.0),
+                            decoration: boxDecorationStyle(),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'สถานะการตรวจสอบ (ผู้ใช้ทั่วไป)',
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 10),
+                                AspectRatio(
+                                  aspectRatio: 1.5,
+                                  child: PieChart(
+                                    PieChartData(
+                                      sections: [
+                                        PieChartSectionData(
+                                          value: checkedCount.toDouble(),
+                                          title:
+                                              '${checkedPercentage.toStringAsFixed(1)}%',
+                                          color: Colors.green,
+                                          radius: 50,
+                                        ),
+                                        PieChartSectionData(
+                                          value: brokenCount.toDouble(),
+                                          title:
+                                              '${brokenPercentage.toStringAsFixed(1)}%',
+                                          color: Colors.red,
+                                          radius: 50,
+                                        ),
+                                        PieChartSectionData(
+                                          value: repairCount.toDouble(),
+                                          title:
+                                              '${repairPercentage.toStringAsFixed(1)}%',
+                                          color: Colors.orange,
+                                          radius: 50,
+                                        ),
+                                        PieChartSectionData(
+                                          value: uncheckedCount.toDouble(),
+                                          title:
+                                              '${uncheckedPercentage.toStringAsFixed(1)}%',
+                                          color: Colors.grey,
+                                          radius: 50,
+                                        ),
+                                      ],
+                                      sectionsSpace: 2,
+                                      centerSpaceRadius: 40,
+                                    ),
                                   ),
-                                  PieChartSectionData(
-                                    value: brokenCount.toDouble(),
-                                    title:
-                                        '${brokenPercentage.toStringAsFixed(1)}%',
-                                    color: Colors.red,
-                                    radius: 50,
-                                  ),
-                                  PieChartSectionData(
-                                    value: repairCount.toDouble(),
-                                    title:
-                                        '${repairPercentage.toStringAsFixed(1)}%',
-                                    color: Colors.orange,
-                                    radius: 50,
-                                  ),
-                                  PieChartSectionData(
-                                    value: uncheckedCount.toDouble(),
-                                    title:
-                                        '${uncheckedPercentage.toStringAsFixed(1)}%',
-                                    color: Colors.grey,
-                                    radius: 50,
-                                  ),
-                                ],
-                                sectionsSpace: 2,
-                                centerSpaceRadius: 40,
-                              ),
+                                ),
+                                const SizedBox(height: 10),
+                                Wrap(
+                                  spacing: 10,
+                                  children: const [
+                                    LegendItem(
+                                        color: Colors.green,
+                                        text: 'ตรวจสอบแล้ว'),
+                                    LegendItem(
+                                        color: Colors.red, text: 'ชำรุด'),
+                                    LegendItem(
+                                        color: Colors.orange, text: 'ส่งซ่อม'),
+                                    LegendItem(
+                                        color: Colors.grey,
+                                        text: 'ยังไม่ตรวจสอบ'),
+                                  ],
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 10),
-                          Wrap(
-                            spacing: 10,
-                            children: const [
-                              LegendItem(
-                                  color: Colors.green, text: 'ตรวจสอบแล้ว'),
-                              LegendItem(color: Colors.red, text: 'ชำรุด'),
-                              LegendItem(color: Colors.orange, text: 'ส่งซ่อม'),
-                              LegendItem(
-                                  color: Colors.grey, text: 'ยังไม่ตรวจสอบ'),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 30),
-
-                // กล่อง 4 (ข้อมูลจาก status_technician)
-                Expanded(
-                  child: SizedBox(
-                    height: 300,
-                    child: Container(
-                      padding: const EdgeInsets.all(12.0),
-                      decoration: boxDecorationStyle(),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'สถานะการตรวจสอบ (ช่างเทคนิค)',
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 10),
-                          Flexible(
-                            child: PieChart(
-                              PieChartData(
-                                sections: [
-                                  PieChartSectionData(
-                                    value: checkedTechnicianCount.toDouble(),
-                                    title:
-                                        '${checkedTechnicianPercentage.toStringAsFixed(1)}%',
-                                    color: Colors.green,
-                                    radius: 50,
+                        ),
+                        SizedBox(
+                          width: isSmallScreen
+                              ? constraints.maxWidth
+                              : constraints.maxWidth / 2 - 16,
+                          child: Container(
+                            padding: const EdgeInsets.all(12.0),
+                            decoration: boxDecorationStyle(),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'สถานะการตรวจสอบ (ช่างเทคนิค)',
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 10),
+                                AspectRatio(
+                                  aspectRatio: 1.5,
+                                  child: PieChart(
+                                    PieChartData(
+                                      sections: [
+                                        PieChartSectionData(
+                                          value:
+                                              checkedTechnicianCount.toDouble(),
+                                          title:
+                                              '${checkedTechnicianPercentage.toStringAsFixed(1)}%',
+                                          color: Colors.green,
+                                          radius: 50,
+                                        ),
+                                        PieChartSectionData(
+                                          value:
+                                              brokenTechnicianCount.toDouble(),
+                                          title:
+                                              '${brokenTechnicianPercentage.toStringAsFixed(1)}%',
+                                          color: Colors.red,
+                                          radius: 50,
+                                        ),
+                                        PieChartSectionData(
+                                          value:
+                                              repairTechnicianCount.toDouble(),
+                                          title:
+                                              '${repairTechnicianPercentage.toStringAsFixed(1)}%',
+                                          color: Colors.orange,
+                                          radius: 50,
+                                        ),
+                                        PieChartSectionData(
+                                          value: uncheckedTechnicianCount
+                                              .toDouble(),
+                                          title:
+                                              '${uncheckedTechnicianPercentage.toStringAsFixed(1)}%',
+                                          color: Colors.grey,
+                                          radius: 50,
+                                        ),
+                                      ],
+                                      sectionsSpace: 2,
+                                      centerSpaceRadius: 40,
+                                    ),
                                   ),
-                                  PieChartSectionData(
-                                    value: brokenTechnicianCount.toDouble(),
-                                    title:
-                                        '${brokenTechnicianPercentage.toStringAsFixed(1)}%',
-                                    color: Colors.red,
-                                    radius: 50,
-                                  ),
-                                  PieChartSectionData(
-                                    value: repairTechnicianCount.toDouble(),
-                                    title:
-                                        '${repairTechnicianPercentage.toStringAsFixed(1)}%',
-                                    color: Colors.orange,
-                                    radius: 50,
-                                  ),
-                                  PieChartSectionData(
-                                    value: uncheckedTechnicianCount.toDouble(),
-                                    title:
-                                        '${uncheckedTechnicianPercentage.toStringAsFixed(1)}%',
-                                    color: Colors.grey,
-                                    radius: 50,
-                                  ),
-                                ],
-                                sectionsSpace: 2,
-                                centerSpaceRadius: 40,
-                              ),
+                                ),
+                                const SizedBox(height: 10),
+                                Wrap(
+                                  spacing: 10,
+                                  children: const [
+                                    LegendItem(
+                                        color: Colors.green,
+                                        text: 'ตรวจสอบแล้ว'),
+                                    LegendItem(
+                                        color: Colors.red, text: 'ชำรุด'),
+                                    LegendItem(
+                                        color: Colors.orange, text: 'ส่งซ่อม'),
+                                    LegendItem(
+                                        color: Colors.grey,
+                                        text: 'ยังไม่ตรวจสอบ'),
+                                  ],
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 10),
-                          Wrap(
-                            spacing: 10,
-                            children: const [
-                              LegendItem(
-                                  color: Colors.green, text: 'ตรวจสอบแล้ว'),
-                              LegendItem(color: Colors.red, text: 'ชำรุด'),
-                              LegendItem(color: Colors.orange, text: 'ส่งซ่อม'),
-                              LegendItem(
-                                  color: Colors.grey, text: 'ยังไม่ตรวจสอบ'),
-                            ],
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-              ],
-            )
+                  ],
+                );
+              },
+            ),
           ],
         ),
       ),

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firecheck_setup/admin/fire_tank_status.dart';
-import 'package:firecheck_setup/admin/dashboard_section/status_summary.dart';
-import 'package:firecheck_setup/admin/dashboard_section/scheduleBox.dart';
-import 'package:firecheck_setup/admin/dashboard_section/status_summary_tech.dart';
+import 'package:firecheck_setup/admin/inspection_section/status_summary.dart';
+import 'package:firecheck_setup/admin/inspection_section/scheduleBox.dart';
+import 'package:firecheck_setup/admin/inspection_section/status_summary_tech.dart';
 //import 'package:firecheck_setup/admin/fire_tank_status.dart';
+import 'package:firecheck_setup/admin/inspection_section/filterWidget.dart';
 
 class InspectionHistoryPage extends StatefulWidget {
   const InspectionHistoryPage({super.key});
@@ -22,9 +23,34 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
   bool get isTechnician =>
       !isUserView; // กำหนดให้ isTechnician ตรงข้ามกับ isUserView
 
-  List<String> _buildings = [];
-  List<String> _floors = [];
   List<Map<String, dynamic>> combinedData = [];
+
+  void _onBuildingChanged(String? value) {
+    setState(() {
+      selectedBuilding = value;
+      selectedFloor = null; // รีเซ็ตชั้นเมื่อเลือกอาคารใหม่
+    });
+  }
+
+  void _onFloorChanged(String? value) {
+    setState(() {
+      selectedFloor = value;
+    });
+  }
+
+  void _onStatusChanged(String? value) {
+    setState(() {
+      selectedStatus = value;
+    });
+  }
+
+  void _onReset() {
+    setState(() {
+      selectedBuilding = null;
+      selectedFloor = null;
+      selectedStatus = null;
+    });
+  }
 
   int remainingTime = FireTankStatusPageState.calculateRemainingTime();
   int remainingQuarterTimeInSeconds =
@@ -84,7 +110,6 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
   void initState() {
     super.initState();
     _fetchFireTankData(); // ดึงข้อมูลเมื่อหน้าเริ่มต้น
-    fetchBuildings();
 
     remainingQuarterTimeInSeconds =
         FireTankStatusPageState.calculateNextQuarterEnd()
@@ -92,59 +117,7 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
             .inSeconds;
   }
 
-  Future<void> fetchBuildings() async {
-    try {
-      final snapshot = await FirebaseFirestore.instance
-          .collection('firetank_Collection')
-          .get();
-
-      if (snapshot.docs.isEmpty) {
-        print('ไม่มีข้อมูลใน collection firetank_Collection');
-        return;
-      }
-
-      final buildings = snapshot.docs
-          .where((doc) => doc
-              .data()
-              .containsKey('building')) // ตรวจสอบว่ามีฟิลด์ 'building'
-          .map((doc) => doc['building'] as String)
-          .toSet()
-          .toList();
-
-      setState(() {
-        _buildings = buildings;
-      });
-    } catch (e) {
-      print('เกิดข้อผิดพลาดในการดึงข้อมูล: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('เกิดข้อผิดพลาดในการดึงข้อมูลจาก Firestore'),
-          duration: Duration(seconds: 3),
-        ),
-      );
-    }
-  }
-
   /// ดึงรายชื่อชั้นของอาคารที่เลือก
-  Future<void> fetchFloors(String building) async {
-    final snapshot = await FirebaseFirestore.instance
-        .collection('firetank_Collection')
-        .where('building', isEqualTo: building)
-        .get();
-
-    final floors = snapshot.docs
-        .map((doc) => doc['floor'].toString()) // แปลงเป็น String
-        .toSet()
-        .toList();
-
-    floors.sort(
-        (a, b) => int.parse(a).compareTo(int.parse(b))); // เรียงจากน้อยไปมาก
-
-    setState(() {
-      _floors = floors;
-      selectedFloor = null;
-    });
-  }
 
   // ฟังก์ชันสำหรับการแก้ไขสถานะการตรวจสอบ
   Future<void> _updateStatus(
@@ -443,178 +416,128 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center, // จัดตำแหน่งกลาง
               children: [
-                Row(
-                  mainAxisAlignment:
-                      MainAxisAlignment.center, // ใช้เพื่อจัดตำแหน่งกลาง
-                  children: [
-                    Expanded(
-                      // ให้ ScheduleBox ขยายพื้นที่ตามที่เหลือ
-                      child: ScheduleBox(
-                        remainingTime: remainingTime,
-                        remainingQuarterTime: remainingQuarterTimeInSeconds,
-                      ),
-                    ),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    bool isSmallScreen = constraints.maxWidth <
+                        1000; // กำหนดให้เป็นหน้าจอเล็กเมื่อกว้างน้อยกว่า 1000px
 
-                    // เพิ่ม Spacer() ก่อน StatusSummaryWidget
-                    Spacer(), // เพิ่มเพื่อให้ StatusSummaryWidget อยู่กลาง
-                    Offstage(
-                      offstage:
-                          !isUserView, // ซ่อน StatusSummaryWidget เมื่อเลือกเป็นช่างเทคนิค
-                      child: StatusSummaryWidget(
-                        totalTanks: totalTanks,
-                        checkedCount: checkedCount,
-                        brokenCount: brokenCount,
-                        repairCount: repairCount,
-                      ),
-                    ),
-
-                    // เพิ่ม Spacer() ก่อน StatusSummaryTech
-                    Spacer(), // เพิ่มเพื่อให้ StatusSummaryTech อยู่กลาง
-                    Offstage(
-                      offstage:
-                          isUserView, // ซ่อน StatusSummaryTech เมื่อเลือกเป็นผู้ใช้ทั่วไป
-                      child: StatusSummaryTech(),
-                    ),
-
-                    ToggleButtons(
-                      isSelected: [isUserView, isTechnician],
-                      onPressed: (index) {
-                        setState(() {
-                          isUserView = index == 0;
-                        });
-                      },
-                      children: const [
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16),
-                          child: Text('ผู้ใช้ทั่วไป'),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16),
-                          child: Text('ช่างเทคนิค'),
-                        ),
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // ใช้ Row เมื่อหน้าจอกว้างและ Column เมื่อหน้าจอเล็ก
+                        isSmallScreen
+                            ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                      mainAxisAlignment: MainAxisAlignment
+                                          .spaceBetween, // ชิดมุมด้านซ้ายและขวา
+                                      children: [
+                                        ScheduleBox(
+                                          remainingTime: remainingTime,
+                                          remainingQuarterTime:
+                                              remainingQuarterTimeInSeconds,
+                                        ),
+                                        ToggleButtons(
+                                          isSelected: [
+                                            isUserView,
+                                            isTechnician
+                                          ],
+                                          onPressed: (index) {
+                                            setState(() {
+                                              isUserView = index == 0;
+                                            });
+                                          },
+                                          children: const [
+                                            Padding(
+                                              padding: EdgeInsets.symmetric(
+                                                  horizontal: 16),
+                                              child: Text('ผู้ใช้ทั่วไป'),
+                                            ),
+                                            Padding(
+                                              padding: EdgeInsets.symmetric(
+                                                  horizontal: 16),
+                                              child: Text('ช่างเทคนิค'),
+                                            ),
+                                          ],
+                                        )
+                                      ]),
+                                  Offstage(
+                                    offstage: isTechnician,
+                                    child: StatusSummaryWidget(
+                                      totalTanks: totalTanks,
+                                      checkedCount: checkedCount,
+                                      brokenCount: brokenCount,
+                                      repairCount: repairCount,
+                                    ),
+                                  ),
+                                  Offstage(
+                                    offstage: isUserView,
+                                    child: StatusSummaryTech(),
+                                  ),
+                                ],
+                              )
+                            : Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: ScheduleBox(
+                                      remainingTime: remainingTime,
+                                      remainingQuarterTime:
+                                          remainingQuarterTimeInSeconds,
+                                    ),
+                                  ),
+                                  Offstage(
+                                    offstage: isTechnician,
+                                    child: StatusSummaryWidget(
+                                      totalTanks: totalTanks,
+                                      checkedCount: checkedCount,
+                                      brokenCount: brokenCount,
+                                      repairCount: repairCount,
+                                    ),
+                                  ),
+                                  Offstage(
+                                    offstage: isUserView,
+                                    child: StatusSummaryTech(),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  ToggleButtons(
+                                    isSelected: [isUserView, isTechnician],
+                                    onPressed: (index) {
+                                      setState(() {
+                                        isUserView = index == 0;
+                                      });
+                                    },
+                                    children: const [
+                                      Padding(
+                                        padding: EdgeInsets.symmetric(
+                                            horizontal: 16),
+                                        child: Text('ผู้ใช้ทั่วไป'),
+                                      ),
+                                      Padding(
+                                        padding: EdgeInsets.symmetric(
+                                            horizontal: 16),
+                                        child: Text('ช่างเทคนิค'),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                        const SizedBox(height: 16),
                       ],
-                    ),
-                  ],
+                    );
+                  },
                 ),
 
                 // ส่วนตัวกรอง
-                Card(
-                  margin: const EdgeInsets.only(bottom: 20),
-                  color: Colors.white, // เปลี่ยนพื้นหลังเป็นสีขาว
-
-                  elevation: 3,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'ค้นหาและจัดเรียงข้อมูล',
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 10),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: DropdownButton<String>(
-                                hint: const Text('เลือกอาคาร'),
-                                value: selectedBuilding,
-                                onChanged: (value) {
-                                  setState(() {
-                                    selectedBuilding = value;
-                                    selectedFloor = null;
-                                    fetchFloors(
-                                        value!); // อัปเดตรายชื่อชั้นเมื่อเลือกอาคาร
-                                  });
-                                },
-                                items: _buildings
-                                    .map((building) => DropdownMenuItem<String>(
-                                          value: building,
-                                          child: Text(building),
-                                        ))
-                                    .toList(),
-                              ),
-                            ),
-                            const SizedBox(width: 5),
-                            Expanded(
-                              child: DropdownButton<String>(
-                                hint: const Text('เลือกชั้น'),
-                                value: selectedFloor,
-                                onChanged: (value) {
-                                  setState(() {
-                                    selectedFloor = value;
-                                  });
-                                },
-                                items: _floors
-                                    .map((floor) => DropdownMenuItem<String>(
-                                          value: floor,
-                                          child: Text(floor),
-                                        ))
-                                    .toList(),
-                              ),
-                            ),
-                            const SizedBox(width: 5),
-                            Expanded(
-                              child: DropdownButton<String>(
-                                value: selectedStatus,
-                                isExpanded: true,
-                                hint: const Text('เลือกสถานะการตรวจสอบ'),
-                                items: [
-                                  'ตรวจสอบแล้ว',
-                                  'ส่งซ่อม',
-                                  'ชำรุด',
-                                  'ยังไม่ตรวจสอบ',
-                                ].map((status) {
-                                  return DropdownMenuItem<String>(
-                                    value: status,
-                                    child: Text(status),
-                                  );
-                                }).toList(),
-                                onChanged: (value) {
-                                  setState(() {
-                                    selectedStatus = value;
-                                  });
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const SizedBox(
-                                width:
-                                    10), // เพิ่มช่องว่างระหว่าง Dropdown กับปุ่ม
-                            ElevatedButton(
-                              onPressed: () {
-                                setState(() {
-                                  selectedBuilding = null;
-                                  selectedFloor = null;
-                                  selectedStatus =
-                                      null; // รีเซ็ตสถานะการตรวจสอบ
-                                });
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor:
-                                    Colors.blue, // เปลี่ยนพื้นหลังเป็นสีฟ้า
-                              ),
-                              child: const Text(
-                                'รีเซ็ตตัวกรองทั้งหมด',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                      ],
-                    ),
-                  ),
+                FilterWidget(
+                  selectedBuilding: selectedBuilding,
+                  selectedFloor: selectedFloor,
+                  selectedStatus: selectedStatus,
+                  onBuildingChanged: _onBuildingChanged,
+                  onFloorChanged: _onFloorChanged,
+                  onStatusChanged: _onStatusChanged,
+                  onReset: _onReset,
                 ),
 
                 // ส่วนแสดงข้อมูล
@@ -658,7 +581,7 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
                               child: Text('ไม่มีข้อมูลใน Form Checks'));
                         }
 
-// ดึงข้อมูลล่าสุดสำหรับ tank_id แต่ละรายการ
+                        // ดึงข้อมูลล่าสุดสำหรับ tank_id แต่ละรายการ
                         Map<String, Map<String, dynamic>> latestFormChecks = {};
                         for (var doc in formChecksSnapshot.data!.docs) {
                           Map<String, dynamic> data =
@@ -779,13 +702,13 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
                           });
                         }
 
-// ปรับให้แสดงข้อมูลตามหน้า (Pagination)
+                        // ปรับให้แสดงข้อมูลตามหน้า (Pagination)
 
                         int totalRows = combinedData.length;
                         int totalPages = (totalRows / rowsPerPage)
                             .ceil(); // คำนวณ totalPages ให้ถูกต้อง
 
-// คำนวณ startIndex และ endIndex ตาม currentPage
+                        // คำนวณ startIndex และ endIndex ตาม currentPage
                         final int startIndex = (currentPage - 1) * rowsPerPage;
                         final int endIndex =
                             (currentPage * rowsPerPage) > totalRows
