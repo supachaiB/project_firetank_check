@@ -89,14 +89,15 @@ class _FilterWidgetState extends State<FilterWidget> {
             const SizedBox(height: 10),
             LayoutBuilder(
               builder: (context, constraints) {
-                bool isMobile = constraints.maxWidth < 700;
+                bool isMobile = constraints.maxWidth < 750;
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (isMobile) ...[
                       // ถ้าหน้าจอเล็กกว่า 700px, ใช้ Column
                       DropdownButton<String>(
-                        hint: const Text('เลือกอาคาร'),
+                        hint: const Text('เลือกอาคาร',
+                            style: TextStyle(fontSize: 14)), // ลดขนาดตัวอักษร
                         value: widget.selectedBuilding,
                         onChanged: (building) {
                           widget.onBuildingChanged(building);
@@ -108,33 +109,39 @@ class _FilterWidgetState extends State<FilterWidget> {
                         items: _buildings
                             .map((building) => DropdownMenuItem<String>(
                                   value: building,
-                                  child: Text(building),
+                                  child: Text(building,
+                                      style: TextStyle(
+                                          fontSize: 14)), // ลดขนาดตัวอักษร
                                 ))
                             .toList(),
                         isExpanded: true, // ขยายให้ยาวเต็มพื้นที่
                         icon: const Icon(Icons.arrow_drop_down,
                             color: Colors.black), // ลูกศรที่มุมสุด
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 8), // ลดระยะห่างระหว่าง Dropdown
                       DropdownButton<String>(
-                        hint: const Text('เลือกชั้น'),
+                        hint: const Text('เลือกชั้น',
+                            style: TextStyle(fontSize: 14)),
                         value: widget.selectedFloor,
                         onChanged: widget.onFloorChanged,
                         items: _floors
                             .map((floor) => DropdownMenuItem<String>(
                                   value: floor,
-                                  child: Text(floor),
+                                  child: Text(floor,
+                                      style: TextStyle(
+                                          fontSize: 14)), // ลดขนาดตัวอักษร
                                 ))
                             .toList(),
                         isExpanded: true, // ขยายให้ยาวเต็มพื้นที่
                         icon: const Icon(Icons.arrow_drop_down,
-                            color: Colors.black), // ลูกศรที่มุมสุด
+                            color: Colors.black),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 8), // ลดระยะห่าง
                       DropdownButton<String>(
                         value: widget.selectedStatus,
                         isExpanded: true,
-                        hint: const Text('เลือกสถานะการตรวจสอบ'),
+                        hint: const Text('เลือกสถานะการตรวจสอบ',
+                            style: TextStyle(fontSize: 14)),
                         items: [
                           'ตรวจสอบแล้ว',
                           'ส่งซ่อม',
@@ -143,14 +150,16 @@ class _FilterWidgetState extends State<FilterWidget> {
                         ].map((status) {
                           return DropdownMenuItem<String>(
                             value: status,
-                            child: Text(status),
+                            child: Text(status,
+                                style:
+                                    TextStyle(fontSize: 14)), // ลดขนาดตัวอักษร
                           );
                         }).toList(),
                         onChanged: widget.onStatusChanged,
                         icon: const Icon(Icons.arrow_drop_down,
-                            color: Colors.black), // ลูกศรที่มุมสุด
+                            color: Colors.black),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 8), // ลดระยะห่าง
                       ElevatedButton(
                         onPressed: widget.onReset,
                         style: ElevatedButton.styleFrom(
@@ -159,7 +168,9 @@ class _FilterWidgetState extends State<FilterWidget> {
                         ),
                         child: const Text(
                           'รีเซ็ตตัวกรองทั้งหมด',
-                          style: TextStyle(color: Colors.white),
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14), // ลดขนาดตัวอักษร
                         ),
                       ),
                     ] else ...[
@@ -169,7 +180,8 @@ class _FilterWidgetState extends State<FilterWidget> {
                         children: [
                           Expanded(
                             child: DropdownButton<String>(
-                              hint: const Text('เลือกอาคาร'),
+                              hint: const Text('เลือกอาคาร',
+                                  style: TextStyle(fontSize: 16)),
                               value: widget.selectedBuilding,
                               onChanged: (building) {
                                 widget.onBuildingChanged(building);
@@ -181,29 +193,36 @@ class _FilterWidgetState extends State<FilterWidget> {
                               items: _buildings
                                   .map((building) => DropdownMenuItem<String>(
                                         value: building,
-                                        child: Text(building),
+                                        child: Text(building,
+                                            style: TextStyle(
+                                                fontSize:
+                                                    16)), // ปรับขนาดตัวอักษร
                                       ))
                                   .toList(),
-                              isExpanded: true, // ขยายให้ยาวเต็มพื้นที่
+                              isExpanded: true,
                               icon: const Icon(Icons.arrow_drop_down,
-                                  color: Colors.black), // ลูกศรที่มุมสุด
+                                  color: Colors.black),
                             ),
                           ),
                           const SizedBox(width: 5),
                           Expanded(
                             child: DropdownButton<String>(
-                              hint: const Text('เลือกชั้น'),
+                              hint: const Text('เลือกชั้น',
+                                  style: TextStyle(fontSize: 16)),
                               value: widget.selectedFloor,
                               onChanged: widget.onFloorChanged,
                               items: _floors
                                   .map((floor) => DropdownMenuItem<String>(
                                         value: floor,
-                                        child: Text(floor),
+                                        child: Text(floor,
+                                            style: TextStyle(
+                                                fontSize:
+                                                    16)), // ปรับขนาดตัวอักษร
                                       ))
                                   .toList(),
-                              isExpanded: true, // ขยายให้ยาวเต็มพื้นที่
+                              isExpanded: true,
                               icon: const Icon(Icons.arrow_drop_down,
-                                  color: Colors.black), // ลูกศรที่มุมสุด
+                                  color: Colors.black),
                             ),
                           ),
                           const SizedBox(width: 5),
@@ -211,7 +230,8 @@ class _FilterWidgetState extends State<FilterWidget> {
                             child: DropdownButton<String>(
                               value: widget.selectedStatus,
                               isExpanded: true,
-                              hint: const Text('เลือกสถานะการตรวจสอบ'),
+                              hint: const Text('เลือกสถานะการตรวจสอบ',
+                                  style: TextStyle(fontSize: 16)),
                               items: [
                                 'ตรวจสอบแล้ว',
                                 'ส่งซ่อม',
@@ -220,24 +240,27 @@ class _FilterWidgetState extends State<FilterWidget> {
                               ].map((status) {
                                 return DropdownMenuItem<String>(
                                   value: status,
-                                  child: Text(status),
+                                  child: Text(status,
+                                      style: TextStyle(
+                                          fontSize: 16)), // ปรับขนาดตัวอักษร
                                 );
                               }).toList(),
                               onChanged: widget.onStatusChanged,
                               icon: const Icon(Icons.arrow_drop_down,
-                                  color: Colors.black), // ลูกศรที่มุมสุด
+                                  color: Colors.black),
                             ),
                           ),
                           const SizedBox(height: 10),
                           ElevatedButton(
                             onPressed: widget.onReset,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  Colors.blue, // เปลี่ยนพื้นหลังเป็นสีฟ้า
+                              backgroundColor: Colors.blue,
                             ),
                             child: const Text(
                               'รีเซ็ตตัวกรองทั้งหมด',
-                              style: TextStyle(color: Colors.white),
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16), // ปรับขนาดตัวอักษร
                             ),
                           ),
                         ],
@@ -246,7 +269,7 @@ class _FilterWidgetState extends State<FilterWidget> {
                   ],
                 );
               },
-            ),
+            )
           ],
         ),
       ),

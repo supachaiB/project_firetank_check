@@ -26,25 +26,31 @@ class StatusSummaryWidget extends StatelessWidget {
                 constraints.maxWidth < 600; // ถ้าหน้าจอแคบกว่า 600px
 
             return isSmallScreen
-                ? Column(
+                ? Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center, // จัดกึ่งกลาง
+
                     children: [
                       _buildSummaryItem("ถังทั้งหมด", totalTanks, Colors.blue),
+                      const SizedBox(width: 8), // เพิ่มระยะห่างระหว่างไอเทม
                       _buildSummaryItem(
                           "ตรวจสอบแล้ว", checkedCount, Colors.green),
+                      const SizedBox(width: 8),
                       _buildSummaryItem(
                         "ยังไม่ตรวจสอบ",
                         totalTanks - checkedCount - brokenCount - repairCount,
                         Colors.grey,
                       ),
+                      const SizedBox(width: 8),
                       _buildSummaryItem("ชำรุด", brokenCount, Colors.red),
+                      const SizedBox(width: 8),
                       _buildSummaryItem("ส่งซ่อม", repairCount, Colors.orange),
                     ],
                   )
                 : SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         _buildSummaryItem(
                             "ถังทั้งหมด", totalTanks, Colors.blue),
@@ -72,22 +78,33 @@ class StatusSummaryWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildSummaryItem(String label, int count, Color color) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        children: [
-          Text(
-            "$label: ",
+  Widget _buildSummaryItem(String title, int value, Color color) {
+    return Column(
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 12, // ขนาดตัวอักษรที่เล็กลง
+            color: Colors.black,
+          ),
+        ),
+        const SizedBox(height: 4), // เพิ่มระยะห่างระหว่างข้อความ
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            value.toString(),
             style: TextStyle(
-                fontSize: 16, fontWeight: FontWeight.bold, color: color),
+              fontSize: 16, // ขนาดตัวอักษรที่เล็กลง
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          Text(
-            "$count",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

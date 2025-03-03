@@ -336,6 +336,8 @@ class _FormCheckPageState extends State<FormCheckPage> {
             children: [
               // แสดงภาพเมื่อได้ข้อมูลแล้ว
               Card(
+                color: Colors.white, // เพิ่มพื้นหลังเป็นสีขาว
+
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -455,7 +457,6 @@ class _FormCheckPageState extends State<FormCheckPage> {
                                         style: TextStyle(fontSize: fontSize)),
                                   ],
                                 ),
-                                SizedBox(height: 8),
                                 Row(
                                   children: [
                                     Text(
@@ -470,25 +471,28 @@ class _FormCheckPageState extends State<FormCheckPage> {
                                     SizedBox(width: 8),
                                     Text(technicianStatus,
                                         style: TextStyle(fontSize: fontSize)),
-                                  ],
-                                ),
-                                SizedBox(height: 8),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            FireTankDetailsPage(
-                                          tankId: widget.tankId,
-                                        ),
+                                    // Expanded widget จะช่วยให้ TextButton ไปอยู่ด้านขวาสุด
+                                    Expanded(
+                                        child:
+                                            Container()), // พื้นที่ว่างให้ปุ่มอยู่ขวาสุด
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                FireTankDetailsPage(
+                                              tankId: widget.tankId,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      child: Text(
+                                        'ดูทั้งหมด',
+                                        style: TextStyle(fontSize: fontSize),
                                       ),
-                                    );
-                                  },
-                                  child: Text(
-                                    'ดูทั้งหมด',
-                                    style: TextStyle(fontSize: fontSize),
-                                  ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             );
@@ -539,6 +543,8 @@ class _FormCheckPageState extends State<FormCheckPage> {
                 style: TextStyle(fontSize: fontSize),
               ),
               Card(
+                color: Colors.white, // เพิ่มพื้นหลังเป็นสีขาว
+
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(

@@ -143,69 +143,127 @@ class _FireTankManagementPageState extends State<FireTankManagementPage> {
         child: Column(
           children: [
             // ตัวกรอง
-            Row(
-              children: [
-                // ตัวกรองอาคาร
-                Expanded(
-                  child: DropdownButton<String>(
-                    hint: const Text('เลือกอาคาร'),
-                    value: _selectedBuilding,
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedBuilding = value;
-                        _selectedFloor = null;
-                        fetchFloors(value!); // อัปเดตรายชื่อชั้นเมื่อเลือกอาคาร
-                      });
-                    },
-                    items: _buildings
-                        .map((building) => DropdownMenuItem<String>(
-                              value: building,
-                              child: Text(building),
-                            ))
-                        .toList(),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                // ตัวกรองชั้น
-                Expanded(
-                  child: DropdownButton<String>(
-                    hint: const Text('เลือกชั้น'),
-                    value: _selectedFloor,
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedFloor = value;
-                      });
-                    },
-                    items: _floors
-                        .map((floor) => DropdownMenuItem<String>(
-                              value: floor,
-                              child: Text(floor),
-                            ))
-                        .toList(),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                // ตัวกรองประเภท
-                Expanded(
-                  child: DropdownButton<String>(
-                    hint: const Text('เลือกประเภท'),
-                    value: _selectedType,
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedType = value;
-                      });
-                    },
-                    items: _types
-                        .map((type) => DropdownMenuItem<String>(
-                              value: type,
-                              child: Text(type),
-                            ))
-                        .toList(),
-                  ),
-                ),
-              ],
+            LayoutBuilder(
+              builder: (context, constraints) {
+                if (constraints.maxWidth > 600) {
+                  // ถ้ากว้างเกิน 600 ใช้ Row (แนวนอน)
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: DropdownButton<String>(
+                          hint: const Text('เลือกอาคาร'),
+                          value: _selectedBuilding,
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedBuilding = value;
+                              _selectedFloor = null;
+                              fetchFloors(value!);
+                            });
+                          },
+                          items: _buildings
+                              .map((building) => DropdownMenuItem<String>(
+                                    value: building,
+                                    child: Text(building),
+                                  ))
+                              .toList(),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: DropdownButton<String>(
+                          hint: const Text('เลือกชั้น'),
+                          value: _selectedFloor,
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedFloor = value;
+                            });
+                          },
+                          items: _floors
+                              .map((floor) => DropdownMenuItem<String>(
+                                    value: floor,
+                                    child: Text(floor),
+                                  ))
+                              .toList(),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: DropdownButton<String>(
+                          hint: const Text('เลือกประเภท'),
+                          value: _selectedType,
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedType = value;
+                            });
+                          },
+                          items: _types
+                              .map((type) => DropdownMenuItem<String>(
+                                    value: type,
+                                    child: Text(type),
+                                  ))
+                              .toList(),
+                        ),
+                      ),
+                    ],
+                  );
+                } else {
+                  // ถ้ากว้างน้อยกว่า 600 ใช้ Column (แนวตั้ง)
+                  return Column(
+                    children: [
+                      DropdownButton<String>(
+                        hint: const Text('เลือกอาคาร'),
+                        value: _selectedBuilding,
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedBuilding = value;
+                            _selectedFloor = null;
+                            fetchFloors(value!);
+                          });
+                        },
+                        items: _buildings
+                            .map((building) => DropdownMenuItem<String>(
+                                  value: building,
+                                  child: Text(building),
+                                ))
+                            .toList(),
+                      ),
+                      const SizedBox(height: 10),
+                      DropdownButton<String>(
+                        hint: const Text('เลือกชั้น'),
+                        value: _selectedFloor,
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedFloor = value;
+                          });
+                        },
+                        items: _floors
+                            .map((floor) => DropdownMenuItem<String>(
+                                  value: floor,
+                                  child: Text(floor),
+                                ))
+                            .toList(),
+                      ),
+                      const SizedBox(height: 10),
+                      DropdownButton<String>(
+                        hint: const Text('เลือกประเภท'),
+                        value: _selectedType,
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedType = value;
+                          });
+                        },
+                        items: _types
+                            .map((type) => DropdownMenuItem<String>(
+                                  value: type,
+                                  child: Text(type),
+                                ))
+                            .toList(),
+                      ),
+                    ],
+                  );
+                }
+              },
             ),
-            const SizedBox(height: 10),
 
             // **ปุ่มรีเซ็ตตัวกรอง**
             Row(

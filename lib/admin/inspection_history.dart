@@ -52,7 +52,7 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
     });
   }
 
-  int remainingTime = FireTankStatusPageState.calculateRemainingTime();
+  int remainingTimeInSeconds = FireTankStatusPageState.calculateRemainingTime();
   int remainingQuarterTimeInSeconds =
       FireTankStatusPageState.calculateNextQuarterEnd()
           .difference(DateTime.now())
@@ -434,8 +434,9 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
                                           .spaceBetween, // ชิดมุมด้านซ้ายและขวา
                                       children: [
                                         ScheduleBox(
-                                          remainingTime: remainingTime,
-                                          remainingQuarterTime:
+                                          remainingTimeInSeconds:
+                                              remainingTimeInSeconds,
+                                          remainingQuarterTimeInSeconds:
                                               remainingQuarterTimeInSeconds,
                                         ),
                                         ToggleButtons(
@@ -482,8 +483,9 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
                                 children: [
                                   Expanded(
                                     child: ScheduleBox(
-                                      remainingTime: remainingTime,
-                                      remainingQuarterTime:
+                                      remainingTimeInSeconds:
+                                          remainingTimeInSeconds,
+                                      remainingQuarterTimeInSeconds:
                                           remainingQuarterTimeInSeconds,
                                     ),
                                   ),
@@ -634,48 +636,42 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
 
                           return {
                             'tank_id': tankId,
-                            'type': firetank['type']?.toString() ??
-                                'N/A', // เพิ่มประเภทถัง
-
-                            'building': firetank['building']?.toString() ??
-                                'N/A', // แปลงเป็น String
-                            'floor': firetank['floor']?.toString() ??
-                                'N/A', // แปลงเป็น String
+                            'type': firetank['type']?.toString() ?? 'N/A',
+                            'building':
+                                firetank['building']?.toString() ?? 'N/A',
+                            'floor': firetank['floor']?.toString() ?? 'N/A',
                             'date_checked':
                                 latestFormCheck['date_checked']?.toString() ??
-                                    'N/A', // แปลงเป็น String
+                                    'N/A',
                             'inspector':
                                 latestFormCheck['inspector']?.toString() ??
-                                    'N/A', // แปลงเป็น String
+                                    'N/A',
                             'user_type':
                                 latestFormCheck['user_type']?.toString() ??
-                                    'N/A', // แปลงเป็น String
-                            'status': firetank['status']?.toString() ??
-                                'N/A', // แปลงเป็น String
+                                    'N/A',
+                            'status': firetank['status']?.toString() ?? 'N/A',
                             'status_technician':
                                 firetank['status_technician']?.toString() ??
                                     'N/A',
-                            'remarks': latestFormCheck['remarks']?.toString() ??
-                                'N/A', // แปลงเป็น String
+                            'remarks':
+                                latestFormCheck['remarks']?.toString() ?? 'N/A',
                           };
                         }).toList();
 
-                        // การจัดเรียงข้อมูลตามหมายเลขถัง (จาก FE001 ไป FE002)
+                        // การจัดเรียงข้อมูลตามหมายเลขถัง
                         combinedData.sort((a, b) {
                           String tankIdA = a['tank_id'] ?? 'N/A';
                           String tankIdB = b['tank_id'] ?? 'N/A';
 
-                          // แปลง FE001 เป็น 1, FE002 เป็น 2, และอื่น ๆ โดยใช้เลขที่อยู่หลัง FE
                           int numberA =
                               int.tryParse(tankIdA.replaceFirst('FE', '')) ?? 0;
                           int numberB =
                               int.tryParse(tankIdB.replaceFirst('FE', '')) ?? 0;
 
-                          return numberA
-                              .compareTo(numberB); // จัดเรียงจากน้อยไปหามาก
+                          return numberA.compareTo(numberB);
                         });
 
-                        // กรองข้อมูลตามตัวเลือก
+                        // การกรองข้อมูลตามตัวเลือก
                         if (selectedBuilding != null &&
                             selectedBuilding!.isNotEmpty) {
                           combinedData = combinedData.where((inspection) {
@@ -695,20 +691,9 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
                           }).toList();
                         }
 
-                        // การจัดเรียงข้อมูล
-                        if (sortBy == 'tank_number') {
-                          combinedData.sort((a, b) {
-                            return a['tank_id'].compareTo(b['tank_id']);
-                          });
-                        }
-
-                        // ปรับให้แสดงข้อมูลตามหน้า (Pagination)
-
+                        // ปรับข้อมูลให้แสดงหน้า (Pagination)
                         int totalRows = combinedData.length;
-                        int totalPages = (totalRows / rowsPerPage)
-                            .ceil(); // คำนวณ totalPages ให้ถูกต้อง
-
-                        // คำนวณ startIndex และ endIndex ตาม currentPage
+                        int totalPages = (totalRows / rowsPerPage).ceil();
                         final int startIndex = (currentPage - 1) * rowsPerPage;
                         final int endIndex =
                             (currentPage * rowsPerPage) > totalRows
@@ -720,149 +705,213 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
 
                         return SingleChildScrollView(
                           child: Column(children: [
-                            Container(
-                              margin: EdgeInsets.all(16), // เพิ่มระยะขอบ
-                              padding: EdgeInsets.all(12), // เพิ่มระยะภายใน
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: DataTable(
-                                headingRowColor: MaterialStateColor.resolveWith(
-                                  (states) => Colors.blueGrey.shade50,
-                                ),
-                                dataRowColor: MaterialStateColor.resolveWith(
-                                  (states) => Colors.white,
-                                ),
-                                columns: const [
-                                  DataColumn(label: Text('หมายเลขถัง')),
-                                  DataColumn(
-                                      label: Text(
-                                          'ประเภทถัง')), // เพิ่มคอลัมน์ประเภทถัง
-
-                                  DataColumn(label: Text('อาคาร')),
-                                  DataColumn(label: Text('ชั้น')),
-                                  DataColumn(label: Text('วันที่ตรวจสอบ')),
-                                  DataColumn(label: Text('ผู้ตรวจสอบ')),
-                                  DataColumn(label: Text('ประเภทผู้ใช้')),
-                                  DataColumn(label: Text('ผลการตรวจสอบ')),
-                                  DataColumn(label: Text('หมายเหตุ')),
-                                  DataColumn(label: Text('การกระทำ')),
-                                ],
-                                rows: currentPageData.map((inspection) {
-                                  Color statusColor = Colors.grey;
-
-                                  if (inspection['status'] == 'ตรวจสอบแล้ว') {
-                                    statusColor = Colors.green;
-                                  } else if (inspection['status'] == 'ชำรุด') {
-                                    statusColor = Colors.red;
-                                  } else if (inspection['status'] ==
-                                      'ส่งซ่อม') {
-                                    statusColor = Colors.orange;
-                                  }
-
-                                  // เช็คสีจาก status_technician
-                                  Color technicianStatusColor = Colors.grey;
-                                  if (inspection['status_technician'] ==
-                                      'ตรวจสอบแล้ว') {
-                                    technicianStatusColor = Colors.green;
-                                  } else if (inspection['status_technician'] ==
-                                      'ชำรุด') {
-                                    technicianStatusColor = Colors.red;
-                                  } else if (inspection['status_technician'] ==
-                                      'ส่งซ่อม') {
-                                    technicianStatusColor = Colors.orange;
-                                  }
-
-                                  return DataRow(
-                                    color: MaterialStateColor.resolveWith(
-                                        (states) => Colors.white),
-                                    cells: [
-                                      DataCell(Text(
-                                          inspection['tank_id']?.toString() ??
-                                              'N/A')),
-                                      DataCell(Text(
-                                          inspection['type']?.toString() ??
-                                              'N/A')), // แสดงประเภทถัง
-
-                                      DataCell(Text(
-                                          inspection['building']?.toString() ??
-                                              'N/A')),
-                                      DataCell(Text(
-                                          inspection['floor']?.toString() ??
-                                              'N/A')),
-                                      DataCell(Text(inspection['date_checked']
-                                              ?.toString() ??
-                                          'N/A')),
-                                      DataCell(Text(
-                                          inspection['inspector']?.toString() ??
-                                              'N/A')),
-                                      DataCell(Text(
-                                          inspection['user_type']?.toString() ??
-                                              'N/A')),
-                                      DataCell(
-                                        Row(
-                                          children: [
-                                            Container(
-                                              width: 12,
-                                              height: 12,
-                                              decoration: BoxDecoration(
-                                                color: isUserView
-                                                    ? statusColor
-                                                    : technicianStatusColor, // ใช้สีที่แตกต่างตามประเภทผู้ใช้
-                                                shape: BoxShape.circle,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 10),
-                                            Text(
-                                              isUserView
-                                                  ? (inspection['status']
-                                                          ?.toString() ??
-                                                      'N/A') // ผู้ใช้ทั่วไป
-                                                  : (inspection[
-                                                              'status_technician']
-                                                          ?.toString() ??
-                                                      'N/A'), // ช่างเทคนิค
-                                            ),
+                            // Wrap the DataTable inside a LayoutBuilder to adjust column visibility for small screens
+                            SafeArea(
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  bool isSmallScreen =
+                                      constraints.maxWidth < 600;
+                                  return Container(
+                                    margin: EdgeInsets.all(16),
+                                    padding: EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: SingleChildScrollView(
+                                      scrollDirection:
+                                          Axis.horizontal, // เลื่อนในแนวนอน
+                                      child: SingleChildScrollView(
+                                        scrollDirection:
+                                            Axis.vertical, // เลื่อนในแนวตั้ง
+                                        child: DataTable(
+                                          headingRowColor:
+                                              MaterialStateColor.resolveWith(
+                                            (states) => Colors.blueGrey.shade50,
+                                          ),
+                                          dataRowColor:
+                                              MaterialStateColor.resolveWith(
+                                            (states) => Colors.white,
+                                          ),
+                                          columns: [
+                                            DataColumn(
+                                                label: Text('หมายเลขถัง')),
+                                            if (!isSmallScreen)
+                                              DataColumn(
+                                                  label: Text('ประเภทถัง')),
+                                            if (!isSmallScreen)
+                                              DataColumn(label: Text('อาคาร')),
+                                            if (!isSmallScreen)
+                                              DataColumn(label: Text('ชั้น')),
+                                            if (!isSmallScreen)
+                                              DataColumn(
+                                                  label: Text('วันที่ตรวจสอบ')),
+                                            if (!isSmallScreen)
+                                              DataColumn(
+                                                  label: Text('ผู้ตรวจสอบ')),
+                                            if (!isSmallScreen)
+                                              DataColumn(
+                                                  label: Text('ประเภทผู้ใช้')),
+                                            DataColumn(
+                                                label: Text('ผลการตรวจสอบ')),
+                                            if (!isSmallScreen)
+                                              DataColumn(
+                                                  label: Text('หมายเหตุ')),
+                                            DataColumn(label: Text('action')),
                                           ],
+                                          rows:
+                                              currentPageData.map((inspection) {
+                                            Color statusColor = Colors.grey;
+                                            if (inspection['status'] ==
+                                                'ตรวจสอบแล้ว') {
+                                              statusColor = Colors.green;
+                                            } else if (inspection['status'] ==
+                                                'ชำรุด') {
+                                              statusColor = Colors.red;
+                                            } else if (inspection['status'] ==
+                                                'ส่งซ่อม') {
+                                              statusColor = Colors.orange;
+                                            }
+
+                                            Color technicianStatusColor =
+                                                Colors.grey;
+                                            if (inspection[
+                                                    'status_technician'] ==
+                                                'ตรวจสอบแล้ว') {
+                                              technicianStatusColor =
+                                                  Colors.green;
+                                            } else if (inspection[
+                                                    'status_technician'] ==
+                                                'ชำรุด') {
+                                              technicianStatusColor =
+                                                  Colors.red;
+                                            } else if (inspection[
+                                                    'status_technician'] ==
+                                                'ส่งซ่อม') {
+                                              technicianStatusColor =
+                                                  Colors.orange;
+                                            }
+
+                                            return DataRow(
+                                              color: MaterialStateColor
+                                                  .resolveWith(
+                                                      (states) => Colors.white),
+                                              cells: [
+                                                DataCell(Text(
+                                                    inspection['tank_id']
+                                                            ?.toString() ??
+                                                        'N/A')),
+                                                if (!isSmallScreen)
+                                                  DataCell(Text(
+                                                      inspection['type']
+                                                              ?.toString() ??
+                                                          'N/A')),
+                                                if (!isSmallScreen)
+                                                  DataCell(Text(
+                                                      inspection['building']
+                                                              ?.toString() ??
+                                                          'N/A')),
+                                                if (!isSmallScreen)
+                                                  DataCell(Text(
+                                                      inspection['floor']
+                                                              ?.toString() ??
+                                                          'N/A')),
+                                                if (!isSmallScreen)
+                                                  DataCell(Text(
+                                                      inspection['date_checked']
+                                                              ?.toString() ??
+                                                          'N/A')),
+                                                if (!isSmallScreen)
+                                                  DataCell(Text(
+                                                      inspection['inspector']
+                                                              ?.toString() ??
+                                                          'N/A')),
+                                                if (!isSmallScreen)
+                                                  DataCell(Text(
+                                                      inspection['user_type']
+                                                              ?.toString() ??
+                                                          'N/A')),
+                                                DataCell(
+                                                  Row(
+                                                    children: [
+                                                      Container(
+                                                        width: 12,
+                                                        height: 12,
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: isUserView
+                                                              ? statusColor
+                                                              : technicianStatusColor,
+                                                          shape:
+                                                              BoxShape.circle,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(width: 10),
+                                                      Text(
+                                                        isUserView
+                                                            ? (inspection[
+                                                                        'status']
+                                                                    ?.toString() ??
+                                                                'N/A')
+                                                            : (inspection[
+                                                                        'status_technician']
+                                                                    ?.toString() ??
+                                                                'N/A'),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                if (!isSmallScreen)
+                                                  DataCell(Text(
+                                                      inspection['remarks']
+                                                              ?.toString() ??
+                                                          'N/A')),
+                                                DataCell(
+                                                  Row(
+                                                    children: [
+                                                      IconButton(
+                                                        icon: const Icon(
+                                                            Icons.edit),
+                                                        onPressed: () {
+                                                          _showStatusDialog(
+                                                              inspection[
+                                                                      'tank_id'] ??
+                                                                  '',
+                                                              inspection[
+                                                                      'status'] ??
+                                                                  '',
+                                                              isTechnician);
+                                                        },
+                                                      ),
+                                                      IconButton(
+                                                        icon: const Icon(
+                                                            Icons.delete,
+                                                            color: Colors.red),
+                                                        onPressed: () {
+                                                          _showDeleteConfirmationDialog(
+                                                              inspection[
+                                                                      'tank_id'] ??
+                                                                  '',
+                                                              inspection[
+                                                                      'date_checked'] ??
+                                                                  '');
+                                                        },
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            );
+                                          }).toList(),
                                         ),
                                       ),
-                                      DataCell(Text(
-                                          inspection['remarks']?.toString() ??
-                                              'N/A')),
-                                      DataCell(
-                                        Row(
-                                          children: [
-                                            IconButton(
-                                              icon: const Icon(Icons.edit),
-                                              onPressed: () {
-                                                _showStatusDialog(
-                                                    inspection['tank_id'] ?? '',
-                                                    inspection['status'] ?? '',
-                                                    isTechnician);
-                                              },
-                                            ),
-                                            IconButton(
-                                              icon: const Icon(Icons.delete,
-                                                  color: Colors.red),
-                                              onPressed: () {
-                                                _showDeleteConfirmationDialog(
-                                                  inspection['tank_id'] ?? '',
-                                                  inspection['date_checked'] ??
-                                                      '',
-                                                );
-                                              },
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
+                                    ),
                                   );
-                                }).toList(),
+                                },
                               ),
                             ),
 
-                            // ปุ่มเปลี่ยนหน้า
+                            // Pagination controls
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -872,7 +921,6 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
                                     if (currentPage > 1) {
                                       setState(() {
                                         currentPage--;
-                                        print("Previous page: $currentPage");
                                       });
                                     }
                                   },
@@ -884,9 +932,6 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
                                     if (currentPage < totalPages) {
                                       setState(() {
                                         currentPage++;
-                                        print("Next page: $currentPage");
-                                        print(
-                                            "Start Index: $startIndex, End Index: $endIndex");
                                       });
                                     }
                                   },

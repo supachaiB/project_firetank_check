@@ -18,7 +18,7 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  int remainingTime = FireTankStatusPageState.calculateRemainingTime();
+  int remainingTimeInSeconds = FireTankStatusPageState.calculateRemainingTime();
   int remainingQuarterTimeInSeconds =
       FireTankStatusPageState.calculateNextQuarterEnd()
           .difference(DateTime.now())
@@ -100,11 +100,6 @@ class _DashboardPageState extends State<DashboardPage> {
   void initState() {
     super.initState();
     _fetchFireTankData(); // ดึงข้อมูลเมื่อหน้าเริ่มต้น
-
-    remainingQuarterTimeInSeconds =
-        FireTankStatusPageState.calculateNextQuarterEnd()
-            .difference(DateTime.now())
-            .inSeconds;
   }
 
   @override
@@ -147,8 +142,8 @@ class _DashboardPageState extends State<DashboardPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ScheduleBox(
-              remainingTime: remainingTime,
-              remainingQuarterTime: remainingQuarterTimeInSeconds,
+              remainingTimeInSeconds: remainingTimeInSeconds,
+              remainingQuarterTimeInSeconds: remainingQuarterTimeInSeconds,
             ),
             const SizedBox(height: 10),
 

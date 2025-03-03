@@ -1,35 +1,38 @@
 import 'package:flutter/material.dart';
 
 class ScheduleBox extends StatelessWidget {
-  final int remainingTime;
-  final int remainingQuarterTime;
+  final int remainingTimeInSeconds;
+  final int remainingQuarterTimeInSeconds;
 
   const ScheduleBox({
     Key? key,
-    required this.remainingTime,
-    required this.remainingQuarterTime,
+    required this.remainingTimeInSeconds,
+    required this.remainingQuarterTimeInSeconds,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    // คำนวณเวลาสำหรับผู้ใช้ทั่วไป
-    int days = remainingTime ~/ (24 * 3600); // คำนวณจำนวนวัน
-    /*int hours = (remainingTime % (24 * 3600)) ~/ 3600; // คำนวณชั่วโมง
-    int minutes = (remainingTime % 3600) ~/ 60; // คำนวณนาที
-    int seconds = remainingTime % 60; // คำนวณวินาที*/
+    // วันที่ปัจจุบัน
+    DateTime now = DateTime.now();
 
-    // คำนวณเวลาสำหรับช่างเทคนิค
-    int quarterDays = remainingQuarterTime ~/ (24 * 3600);
-    int quarterHours = (remainingQuarterTime % (24 * 3600)) ~/ 3600;
-    /*int quarterMinutes = (remainingQuarterTime % 3600) ~/ 60;
-    int quarterSeconds = remainingQuarterTime % 60;*/
+    // หาวันสุดท้ายของเดือนปัจจุบัน (สิ้นเดือน)
+    DateTime endOfMonth = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
+    Duration remainingTime =
+        endOfMonth.difference(now); // เวลาที่เหลือจนถึงสิ้นเดือน
+
+    // หาวันสุดท้ายของไตรมาส (3 เดือน)
+    int quarterEndMonth =
+        ((now.month - 1) ~/ 3 + 1) * 3; // เดือนสุดท้ายของไตรมาส
+    DateTime endOfQuarter = DateTime(
+        now.year, quarterEndMonth + 1, 0, 23, 59, 59); // วันที่สุดท้ายของไตรมาส
+    Duration remainingQuarterTime =
+        endOfQuarter.difference(now); // เวลาที่เหลือจนถึงสิ้นไตรมาส
 
     return Align(
       alignment: Alignment.centerLeft,
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width *
-              0.9, // จำกัดความกว้างไม่เกิน 90% ของหน้าจอ
+          maxWidth: MediaQuery.of(context).size.width * 0.9,
         ),
         child: Card(
           color: Colors.white,
@@ -37,7 +40,7 @@ class ScheduleBox extends StatelessWidget {
             padding: const EdgeInsets.all(8.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min, // ป้องกันการขยาย Column
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   "กำหนดการตรวจ",
@@ -48,12 +51,14 @@ class ScheduleBox extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 2),
+                // แสดงเวลาเหลือของผู้ใช้ทั่วไป
                 Text(
-                  "ผู้ใช้ทั่วไปเหลือ :  $days วัน $quarterHours ชั่วโมง",
+                  "ผู้ใช้ทั่วไปเหลือ :  ${remainingTime.inDays} วัน ${remainingTime.inHours % 24} ชั่วโมง",
                   style: TextStyle(fontSize: 14),
                 ),
+                // แสดงเวลาเหลือของช่างเทคนิค
                 Text(
-                  "ช่างเทคนิคเหลือ : $quarterDays วัน $quarterHours ชั่วโมง",
+                  "ช่างเทคนิคเหลือ : ${remainingQuarterTime.inDays} วัน ${remainingQuarterTime.inHours % 24} ชั่วโมง",
                   style: TextStyle(fontSize: 14),
                 ),
               ],
