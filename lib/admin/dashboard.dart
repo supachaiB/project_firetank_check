@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-//import 'package:firecheck_setup/admin/dashboard_section/damage_info_section.dart';
+import 'package:firecheck_setup/admin/dashboard_section/damage_info_section.dart';
 import 'package:firecheck_setup/admin/inspection_section/scheduleBox.dart';
 import 'package:firecheck_setup/admin/fire_tank_status.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -198,6 +198,7 @@ class _DashboardPageState extends State<DashboardPage> {
                               repairCount: repairTechnicianCount,
                             )),
                             const SizedBox(width: 16),
+                            Expanded(child: DamageInfoSection()),
                           ],
                         );
                       }

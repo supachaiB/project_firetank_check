@@ -154,8 +154,8 @@ class _FireTankDetailsPageState extends State<FireTankDetailsPage> {
                               checkData['date_checked'] ?? 'ไม่มีข้อมูล';
                           final timeChecked =
                               checkData['time_checked'] ?? 'ไม่มีข้อมูล';
-                          final inspector =
-                              checkData['inspector'] ?? 'ไม่มีข้อมูล';
+                          /*final inspector =
+                              checkData['inspector'] ?? 'ไม่มีข้อมูล';*/
 
                           // ตรวจสอบสถานะตาม user_type และ isTechnicianView
                           final status = isTechnicianView
@@ -174,8 +174,8 @@ class _FireTankDetailsPageState extends State<FireTankDetailsPage> {
                               children: [
                                 Text('วันที่: $dateChecked $timeChecked'),
                                 const SizedBox(height: 5),
-                                Text('ผู้ตรวจสอบ: $inspector'),
-                                const SizedBox(height: 5),
+                                /*Text('ผู้ตรวจสอบ: $inspector'),
+                                const SizedBox(height: 5),*/
                                 Row(
                                   children: [
                                     const Text('สถานะ: '),

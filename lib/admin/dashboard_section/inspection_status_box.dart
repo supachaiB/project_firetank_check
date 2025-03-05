@@ -23,7 +23,7 @@ class InspectionStatusBox extends StatelessWidget {
           const SizedBox(height: 10),
           const Text('การตรวจสอบ(ผู้ใช้ทั่วไป)',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 5),
+          const SizedBox(height: 10),
           buildStatusRow('ตรวจสอบแล้ว', checkedCount, Colors.green),
           buildStatusRow('ยังไม่ตรวจสอบ', uncheckedCount, Colors.grey),
           buildStatusRow('ชำรุด', brokenCount, Colors.red),

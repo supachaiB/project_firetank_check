@@ -13,7 +13,6 @@ class StatusSummaryTech extends StatelessWidget {
     final int totalTanks = snapshot.size;
 
     int checkedCount = 0;
-    int uncheckedCount = 0;
     int brokenCount = 0;
     int repairCount = 0;
 
@@ -21,8 +20,6 @@ class StatusSummaryTech extends StatelessWidget {
       final String status = doc['status_technician'] ?? '';
       if (status == 'ตรวจสอบแล้ว') {
         checkedCount++;
-      } else if (status == 'ยังไม่ตรวจสอบ') {
-        uncheckedCount++;
       } else if (status == 'ชำรุด') {
         brokenCount++;
       } else if (status == 'ส่งซ่อม') {
@@ -33,7 +30,7 @@ class StatusSummaryTech extends StatelessWidget {
     return {
       'totalTanks': totalTanks,
       'checkedCount': checkedCount,
-      'uncheckedCount': uncheckedCount,
+      'uncheckedCount': totalTanks - checkedCount - brokenCount - repairCount,
       'brokenCount': brokenCount,
       'repairCount': repairCount,
     };
@@ -63,24 +60,25 @@ class StatusSummaryTech extends StatelessWidget {
             padding: const EdgeInsets.all(16.0),
             child: LayoutBuilder(
               builder: (context, constraints) {
-                bool isSmallScreen =
-                    constraints.maxWidth < 600; // ถ้าหน้าจอแคบกว่า 600px
+                bool isSmallScreen = constraints.maxWidth < 600;
 
                 return isSmallScreen
-                    ? Column(
+                    ? Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           _buildSummaryItem(
                               "ถังทั้งหมด", data['totalTanks']!, Colors.blue),
+                          const SizedBox(width: 8),
                           _buildSummaryItem("ตรวจสอบแล้ว",
                               data['checkedCount']!, Colors.green),
-                          _buildSummaryItem(
-                            "ยังไม่ตรวจสอบ",
-                            data['uncheckedCount']!,
-                            Colors.grey,
-                          ),
+                          const SizedBox(width: 8),
+                          _buildSummaryItem("ยังไม่ตรวจสอบ",
+                              data['uncheckedCount']!, Colors.grey),
+                          const SizedBox(width: 8),
                           _buildSummaryItem(
                               "ชำรุด", data['brokenCount']!, Colors.red),
+                          const SizedBox(width: 8),
                           _buildSummaryItem(
                               "ส่งซ่อม", data['repairCount']!, Colors.orange),
                         ],
@@ -88,7 +86,7 @@ class StatusSummaryTech extends StatelessWidget {
                     : SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             _buildSummaryItem(
                                 "ถังทั้งหมด", data['totalTanks']!, Colors.blue),
@@ -116,22 +114,33 @@ class StatusSummaryTech extends StatelessWidget {
     );
   }
 
-  Widget _buildSummaryItem(String label, int count, Color color) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        children: [
-          Text(
-            "$label: ",
+  Widget _buildSummaryItem(String title, int value, Color color) {
+    return Column(
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.black,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            value.toString(),
             style: TextStyle(
-                fontSize: 16, fontWeight: FontWeight.bold, color: color),
+              fontSize: 16,
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          Text(
-            "$count",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

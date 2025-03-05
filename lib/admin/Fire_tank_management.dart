@@ -145,123 +145,163 @@ class _FireTankManagementPageState extends State<FireTankManagementPage> {
             // ตัวกรอง
             LayoutBuilder(
               builder: (context, constraints) {
-                if (constraints.maxWidth > 600) {
-                  // ถ้ากว้างเกิน 600 ใช้ Row (แนวนอน)
-                  return Row(
-                    children: [
-                      Expanded(
-                        child: DropdownButton<String>(
-                          hint: const Text('เลือกอาคาร'),
-                          value: _selectedBuilding,
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedBuilding = value;
-                              _selectedFloor = null;
-                              fetchFloors(value!);
-                            });
-                          },
-                          items: _buildings
-                              .map((building) => DropdownMenuItem<String>(
-                                    value: building,
-                                    child: Text(building),
-                                  ))
-                              .toList(),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: DropdownButton<String>(
-                          hint: const Text('เลือกชั้น'),
-                          value: _selectedFloor,
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedFloor = value;
-                            });
-                          },
-                          items: _floors
-                              .map((floor) => DropdownMenuItem<String>(
-                                    value: floor,
-                                    child: Text(floor),
-                                  ))
-                              .toList(),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: DropdownButton<String>(
-                          hint: const Text('เลือกประเภท'),
-                          value: _selectedType,
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedType = value;
-                            });
-                          },
-                          items: _types
-                              .map((type) => DropdownMenuItem<String>(
-                                    value: type,
-                                    child: Text(type),
-                                  ))
-                              .toList(),
-                        ),
-                      ),
-                    ],
-                  );
-                } else {
-                  // ถ้ากว้างน้อยกว่า 600 ใช้ Column (แนวตั้ง)
-                  return Column(
-                    children: [
-                      DropdownButton<String>(
-                        hint: const Text('เลือกอาคาร'),
-                        value: _selectedBuilding,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedBuilding = value;
-                            _selectedFloor = null;
-                            fetchFloors(value!);
-                          });
-                        },
-                        items: _buildings
-                            .map((building) => DropdownMenuItem<String>(
-                                  value: building,
-                                  child: Text(building),
-                                ))
-                            .toList(),
-                      ),
-                      const SizedBox(height: 10),
-                      DropdownButton<String>(
-                        hint: const Text('เลือกชั้น'),
-                        value: _selectedFloor,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedFloor = value;
-                          });
-                        },
-                        items: _floors
-                            .map((floor) => DropdownMenuItem<String>(
-                                  value: floor,
-                                  child: Text(floor),
-                                ))
-                            .toList(),
-                      ),
-                      const SizedBox(height: 10),
-                      DropdownButton<String>(
-                        hint: const Text('เลือกประเภท'),
-                        value: _selectedType,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedType = value;
-                          });
-                        },
-                        items: _types
-                            .map((type) => DropdownMenuItem<String>(
-                                  value: type,
-                                  child: Text(type),
-                                ))
-                            .toList(),
-                      ),
-                    ],
-                  );
-                }
+                bool isMobile = constraints.maxWidth < 600;
+
+                return isMobile
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 2.0,
+                                horizontal:
+                                    16.0), // ปรับความสูงของ DropdownButton
+                            child: DropdownButton<String>(
+                              isExpanded: true,
+                              hint: const Text('เลือกอาคาร'),
+                              value: _selectedBuilding,
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedBuilding = value;
+                                  _selectedFloor = null;
+                                  fetchFloors(value!);
+                                });
+                              },
+                              items: _buildings
+                                  .map((building) => DropdownMenuItem<String>(
+                                        value: building,
+                                        child: Text(building),
+                                      ))
+                                  .toList(),
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 2.0,
+                                horizontal:
+                                    16.0), // ปรับความสูงของ DropdownButton
+                            child: DropdownButton<String>(
+                              isExpanded: true,
+                              hint: const Text('เลือกชั้น'),
+                              value: _selectedFloor,
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedFloor = value;
+                                });
+                              },
+                              items: _floors
+                                  .map((floor) => DropdownMenuItem<String>(
+                                        value: floor,
+                                        child: Text(floor),
+                                      ))
+                                  .toList(),
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 2.0,
+                                horizontal:
+                                    16.0), // ปรับความสูงของ DropdownButton
+                            child: DropdownButton<String>(
+                              isExpanded: true,
+                              hint: const Text('เลือกประเภท'),
+                              value: _selectedType,
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedType = value;
+                                });
+                              },
+                              items: _types
+                                  .map((type) => DropdownMenuItem<String>(
+                                        value: type,
+                                        child: Text(type),
+                                      ))
+                                  .toList(),
+                            ),
+                          ),
+                        ],
+                      )
+                    : Row(
+                        children: [
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 3.0,
+                              ), // ปรับความสูงของ DropdownButton
+                              child: DropdownButton<String>(
+                                isExpanded: true,
+                                hint: const Text('เลือกอาคาร'),
+                                value: _selectedBuilding,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _selectedBuilding = value;
+                                    _selectedFloor = null;
+                                    fetchFloors(value!);
+                                  });
+                                },
+                                items: _buildings
+                                    .map((building) => DropdownMenuItem<String>(
+                                          value: building,
+                                          child: Text(building),
+                                        ))
+                                    .toList(),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 4.0,
+                                  horizontal:
+                                      16.0), // ปรับความสูงของ DropdownButton
+                              child: DropdownButton<String>(
+                                isExpanded: true,
+                                hint: const Text('เลือกชั้น'),
+                                value: _selectedFloor,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _selectedFloor = value;
+                                  });
+                                },
+                                items: _floors
+                                    .map((floor) => DropdownMenuItem<String>(
+                                          value: floor,
+                                          child: Text(floor),
+                                        ))
+                                    .toList(),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 4.0,
+                                  horizontal:
+                                      16.0), // ปรับความสูงของ DropdownButton
+                              child: DropdownButton<String>(
+                                isExpanded: true,
+                                hint: const Text('เลือกประเภท'),
+                                value: _selectedType,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _selectedType = value;
+                                  });
+                                },
+                                items: _types
+                                    .map((type) => DropdownMenuItem<String>(
+                                          value: type,
+                                          child: Text(type),
+                                        ))
+                                    .toList(),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
               },
             ),
 
