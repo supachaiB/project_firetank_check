@@ -13,6 +13,8 @@ class FireTankManagementPage extends StatefulWidget {
 }
 
 class _FireTankManagementPageState extends State<FireTankManagementPage> {
+  bool _isCollapsed = false; // ตัวแปรในการซ่อน/แสดง
+
   String? _selectedBuilding;
   String? _selectedFloor;
   String? _selectedType;
@@ -129,6 +131,8 @@ class _FireTankManagementPageState extends State<FireTankManagementPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[100], // ปรับสีพื้นหลังนอก Container
+
       appBar: AppBar(
         title: const Text(
           'การจัดการถังดับเพลิง',
@@ -147,279 +151,307 @@ class _FireTankManagementPageState extends State<FireTankManagementPage> {
               builder: (context, constraints) {
                 bool isMobile = constraints.maxWidth < 600;
 
-                return isMobile
-                    ? Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 2.0,
-                                horizontal:
-                                    16.0), // ปรับความสูงของ DropdownButton
-                            child: DropdownButton<String>(
-                              isExpanded: true,
-                              hint: const Text('เลือกอาคาร'),
-                              value: _selectedBuilding,
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedBuilding = value;
-                                  _selectedFloor = null;
-                                  fetchFloors(value!);
-                                });
-                              },
-                              items: _buildings
-                                  .map((building) => DropdownMenuItem<String>(
-                                        value: building,
-                                        child: Text(building),
-                                      ))
-                                  .toList(),
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 2.0,
-                                horizontal:
-                                    16.0), // ปรับความสูงของ DropdownButton
-                            child: DropdownButton<String>(
-                              isExpanded: true,
-                              hint: const Text('เลือกชั้น'),
-                              value: _selectedFloor,
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedFloor = value;
-                                });
-                              },
-                              items: _floors
-                                  .map((floor) => DropdownMenuItem<String>(
-                                        value: floor,
-                                        child: Text(floor),
-                                      ))
-                                  .toList(),
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 2.0,
-                                horizontal:
-                                    16.0), // ปรับความสูงของ DropdownButton
-                            child: DropdownButton<String>(
-                              isExpanded: true,
-                              hint: const Text('เลือกประเภท'),
-                              value: _selectedType,
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedType = value;
-                                });
-                              },
-                              items: _types
-                                  .map((type) => DropdownMenuItem<String>(
-                                        value: type,
-                                        child: Text(type),
-                                      ))
-                                  .toList(),
-                            ),
-                          ),
-                        ],
-                      )
-                    : Row(
-                        children: [
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 3.0,
-                              ), // ปรับความสูงของ DropdownButton
-                              child: DropdownButton<String>(
-                                isExpanded: true,
-                                hint: const Text('เลือกอาคาร'),
-                                value: _selectedBuilding,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _selectedBuilding = value;
-                                    _selectedFloor = null;
-                                    fetchFloors(value!);
-                                  });
-                                },
-                                items: _buildings
-                                    .map((building) => DropdownMenuItem<String>(
-                                          value: building,
-                                          child: Text(building),
-                                        ))
-                                    .toList(),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 4.0,
-                                  horizontal:
-                                      16.0), // ปรับความสูงของ DropdownButton
-                              child: DropdownButton<String>(
-                                isExpanded: true,
-                                hint: const Text('เลือกชั้น'),
-                                value: _selectedFloor,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _selectedFloor = value;
-                                  });
-                                },
-                                items: _floors
-                                    .map((floor) => DropdownMenuItem<String>(
-                                          value: floor,
-                                          child: Text(floor),
-                                        ))
-                                    .toList(),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 4.0,
-                                  horizontal:
-                                      16.0), // ปรับความสูงของ DropdownButton
-                              child: DropdownButton<String>(
-                                isExpanded: true,
-                                hint: const Text('เลือกประเภท'),
-                                value: _selectedType,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _selectedType = value;
-                                  });
-                                },
-                                items: _types
-                                    .map((type) => DropdownMenuItem<String>(
-                                          value: type,
-                                          child: Text(type),
-                                        ))
-                                    .toList(),
-                              ),
-                            ),
-                          ),
-                        ],
-                      );
-              },
-            ),
-
-            // **ปุ่มรีเซ็ตตัวกรอง**
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                // ช่องค้นหา Tank ID
-                Flexible(
-                  child: TextField(
-                    onChanged: (value) {
-                      setState(() {
-                        _searchTankId = value;
-                      });
-                    },
-                    decoration: const InputDecoration(
-                      labelText: 'ค้นหาจาก Tank ID',
-                      border: OutlineInputBorder(),
-                      contentPadding:
-                          EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-                    ),
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                ),
-                const SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      _selectedBuilding = null;
-                      _selectedFloor = null;
-                      _selectedType = null;
-                      _searchTankId = '';
-                    });
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue, // เปลี่ยนพื้นหลังเป็นสีฟ้า
-                  ),
-                  child: const Text(
-                    'รีเซ็ตตัวกรองทั้งหมด',
-                    style: TextStyle(
-                        color: Colors.white), // เปลี่ยนตัวหนังสือเป็นสีขาว
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-
-            // **ข้อมูลจำนวนถัง**
-            StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('firetank_Collection')
-                  .where(
-                    'building',
-                    isEqualTo:
-                        _selectedBuilding == null || _selectedBuilding!.isEmpty
-                            ? null
-                            : _selectedBuilding,
-                  )
-                  .where(
-                    'floor',
-                    isEqualTo: _selectedFloor == null || _selectedFloor!.isEmpty
-                        ? null
-                        : _selectedFloor,
-                  )
-                  .where(
-                    'type',
-                    isEqualTo: _selectedType == null || _selectedType!.isEmpty
-                        ? null
-                        : _selectedType,
-                  )
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return const Center(
-                      child: Text('กรุณากรองข้อมูลหรือค้นหาใหม่'));
-                }
-
-                // ตัวแปรเก็บจำนวนถังทั้งหมด
-                int totalTanks = snapshot.data!.docs.length;
-                int expiredTanks = 0;
-                int nonExpiredTanks = 0;
-
-                // คำนวณถังที่หมดอายุและยังไม่หมดอายุ
-                for (var doc in snapshot.data!.docs) {
-                  final data = doc.data() as Map<String, dynamic>;
-                  final installationDate =
-                      (data['installation_date'] as Timestamp).toDate();
-                  final expirationYears = data['expiration_years'];
-
-                  final expirationDate = installationDate
-                      .add(Duration(days: expirationYears * 365));
-                  final currentDate = DateTime.now();
-
-                  if (expirationDate.isBefore(currentDate)) {
-                    expiredTanks++;
-                  } else {
-                    nonExpiredTanks++;
-                  }
-                }
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('ถังดับเพลิงทั้งหมด: $totalTanks'),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('ถังที่หมดอายุ: $expiredTanks'),
-                        SizedBox(height: 5),
-                        Text('ถังที่ยังไม่หมดอายุ: $nonExpiredTanks'),
+                        // ปุ่มไอคอนเพื่อซ่อน/แสดง
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'ค้นหาและจัดเรียงข้อมูล',
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            IconButton(
+                              icon: Icon(
+                                _isCollapsed
+                                    ? Icons.expand_more
+                                    : Icons.expand_less,
+                                color: Colors.black,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _isCollapsed = !_isCollapsed;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        if (!_isCollapsed) ...[
+                          // แสดงฟอร์มเมื่อ _isCollapsed เป็น false
+                          isMobile
+                              ? Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 2.0, horizontal: 16.0),
+                                      child: DropdownButton<String>(
+                                        isExpanded: true,
+                                        hint: const Text('เลือกอาคาร'),
+                                        value: _selectedBuilding,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _selectedBuilding = value;
+                                            _selectedFloor = null;
+                                            fetchFloors(value!);
+                                          });
+                                        },
+                                        items: _buildings
+                                            .map((building) =>
+                                                DropdownMenuItem<String>(
+                                                  value: building,
+                                                  child: Text(building),
+                                                ))
+                                            .toList(),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 5),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 2.0, horizontal: 16.0),
+                                      child: DropdownButton<String>(
+                                        isExpanded: true,
+                                        hint: const Text('เลือกชั้น'),
+                                        value: _selectedFloor,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _selectedFloor = value;
+                                          });
+                                        },
+                                        items: _floors
+                                            .map((floor) =>
+                                                DropdownMenuItem<String>(
+                                                  value: floor,
+                                                  child: Text(floor),
+                                                ))
+                                            .toList(),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 5),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 2.0, horizontal: 16.0),
+                                      child: DropdownButton<String>(
+                                        isExpanded: true,
+                                        hint: const Text('เลือกประเภท'),
+                                        value: _selectedType,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _selectedType = value;
+                                          });
+                                        },
+                                        items: _types
+                                            .map((type) =>
+                                                DropdownMenuItem<String>(
+                                                  value: type,
+                                                  child: Text(type),
+                                                ))
+                                            .toList(),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : Row(
+                                  children: [
+                                    Expanded(
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 3.0, horizontal: 16.0),
+                                        child: DropdownButton<String>(
+                                          isExpanded: true,
+                                          hint: const Text('เลือกอาคาร'),
+                                          value: _selectedBuilding,
+                                          onChanged: (value) {
+                                            setState(() {
+                                              _selectedBuilding = value;
+                                              _selectedFloor = null;
+                                              fetchFloors(value!);
+                                            });
+                                          },
+                                          items: _buildings
+                                              .map((building) =>
+                                                  DropdownMenuItem<String>(
+                                                    value: building,
+                                                    child: Text(building),
+                                                  ))
+                                              .toList(),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 4.0, horizontal: 16.0),
+                                        child: DropdownButton<String>(
+                                          isExpanded: true,
+                                          hint: const Text('เลือกชั้น'),
+                                          value: _selectedFloor,
+                                          onChanged: (value) {
+                                            setState(() {
+                                              _selectedFloor = value;
+                                            });
+                                          },
+                                          items: _floors
+                                              .map((floor) =>
+                                                  DropdownMenuItem<String>(
+                                                    value: floor,
+                                                    child: Text(floor),
+                                                  ))
+                                              .toList(),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 4.0, horizontal: 16.0),
+                                        child: DropdownButton<String>(
+                                          isExpanded: true,
+                                          hint: const Text('เลือกประเภท'),
+                                          value: _selectedType,
+                                          onChanged: (value) {
+                                            setState(() {
+                                              _selectedType = value;
+                                            });
+                                          },
+                                          items: _types
+                                              .map((type) =>
+                                                  DropdownMenuItem<String>(
+                                                    value: type,
+                                                    child: Text(type),
+                                                  ))
+                                              .toList(),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ],
+
+                        // **ปุ่มรีเซ็ตตัวกรอง**
+                        if (!_isCollapsed) ...[
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Flexible(
+                                child: TextField(
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _searchTankId = value;
+                                    });
+                                  },
+                                  decoration: const InputDecoration(
+                                    labelText: 'ค้นหาจาก Tank ID',
+                                    border: OutlineInputBorder(),
+                                    contentPadding: EdgeInsets.symmetric(
+                                        vertical: 10, horizontal: 16),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              ElevatedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _selectedBuilding = null;
+                                    _selectedFloor = null;
+                                    _selectedType = null;
+                                    _searchTankId = '';
+                                  });
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue,
+                                ),
+                                child: const Text(
+                                  'รีเซ็ตตัวกรองทั้งหมด',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+
+                        // **ข้อมูลจำนวนถัง**
+                        StreamBuilder<QuerySnapshot>(
+                          stream: FirebaseFirestore.instance
+                              .collection('firetank_Collection')
+                              .where('building', isEqualTo: _selectedBuilding)
+                              .where('floor', isEqualTo: _selectedFloor)
+                              .where('type', isEqualTo: _selectedType)
+                              .snapshots(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                  child: CircularProgressIndicator());
+                            }
+
+                            if (!snapshot.hasData ||
+                                snapshot.data!.docs.isEmpty) {
+                              return const Center(
+                                  child: Text('กรุณากรองข้อมูลหรือค้นหาใหม่'));
+                            }
+
+                            int totalTanks = snapshot.data!.docs.length;
+                            int expiredTanks = 0;
+                            int nonExpiredTanks = 0;
+
+                            for (var doc in snapshot.data!.docs) {
+                              final data = doc.data() as Map<String, dynamic>;
+                              final installationDate =
+                                  (data['installation_date'] as Timestamp)
+                                      .toDate();
+                              final expirationYears = data['expiration_years'];
+                              final expirationDate = installationDate
+                                  .add(Duration(days: expirationYears * 365));
+                              final currentDate = DateTime.now();
+
+                              if (expirationDate.isBefore(currentDate)) {
+                                expiredTanks++;
+                              } else {
+                                nonExpiredTanks++;
+                              }
+                            }
+
+                            return Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 16),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text('ถังดับเพลิงทั้งหมด: $totalTanks'),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text('ถังที่หมดอายุ: $expiredTanks'),
+                                      SizedBox(height: 5),
+                                      Text(
+                                          'ถังที่ยังไม่หมดอายุ: $nonExpiredTanks'),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
                       ],
                     ),
-                  ],
+                  ),
                 );
               },
             ),
+
             // แสดงข้อมูลถังดับเพลิง
             Expanded(
               child: StreamBuilder<QuerySnapshot>(
@@ -494,54 +526,68 @@ class _FireTankManagementPageState extends State<FireTankManagementPage> {
                       });
 
                       final tank = tanks[index];
-                      return Card(
-                        elevation: 5,
-                        margin: const EdgeInsets.symmetric(vertical: 8),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.all(16.0),
-                          title: Text('Tank ID: ${tank['tank_id']}'),
-                          subtitle: Text(
-                            'ประเภทถัง: ${tank['type']}\nอาคาร: ${tank['building']}\nชั้น: ${tank['floor']}',
-                            style: const TextStyle(color: Colors.grey),
+
+                      return ClipRRect(
+                        borderRadius:
+                            BorderRadius.circular(15), // ทำให้ทุกมุมโค้งมน
+                        child: Card(
+                          color: Colors.white, // พื้นหลังเป็นสีขาว
+                          elevation: 0, // เอาเงาออก
+                          margin: const EdgeInsets.symmetric(
+                              vertical: 8, horizontal: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(15), // ขอบโค้งมน
+                            side: BorderSide(
+                                color: Colors.grey[350]!,
+                                width: 1), // เส้นขอบสีเทา
                           ),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    FireTankDetailPage(tank: tank),
-                              ),
-                            );
-                          },
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon:
-                                    const Icon(Icons.edit, color: Colors.blue),
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => EditFireTankPage(
-                                        tankIdToEdit:
-                                            tank.id, // ส่ง tank_id ของเอกสารไป
+                          child: ListTile(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                  15), // ให้ ListTile มีมุมโค้งเหมือนกัน
+                            ),
+                            contentPadding: const EdgeInsets.all(16.0),
+                            title: Text('Tank ID: ${tank['tank_id']}'),
+                            subtitle: Text(
+                              'ประเภทถัง: ${tank['type']}\nอาคาร: ${tank['building']}\nชั้น: ${tank['floor']}',
+                              style: const TextStyle(color: Colors.grey),
+                            ),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      FireTankDetailPage(tank: tank),
+                                ),
+                              );
+                            },
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.edit,
+                                      color: Colors.blue),
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => EditFireTankPage(
+                                          tankIdToEdit: tank.id,
+                                        ),
                                       ),
-                                    ),
-                                  );
-                                },
-                              ),
-                              IconButton(
-                                icon:
-                                    const Icon(Icons.delete, color: Colors.red),
-                                onPressed: () {
-                                  _confirmDelete(context, tank.id);
-                                },
-                              ),
-                            ],
+                                    );
+                                  },
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete,
+                                      color: Colors.red),
+                                  onPressed: () {
+                                    _confirmDelete(context, tank.id);
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       );

@@ -350,6 +350,8 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[100], // ปรับสีพื้นหลังนอก Container
+
       appBar: AppBar(
         title: const Text(
           'ประวัติการตรวจสอบ',
@@ -418,6 +420,16 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
                                               isUserView = index == 0;
                                             });
                                           },
+                                          color: Colors
+                                              .black, // สีตัวอักษรเมื่อไม่ได้เลือก
+                                          selectedColor: Colors
+                                              .white, // สีตัวอักษรเมื่อเลือก
+                                          fillColor: Colors
+                                              .blue, // สีพื้นหลังเมื่อเลือก
+                                          splashColor:
+                                              Colors.blueAccent, // สีเมื่อกด
+                                          borderRadius: BorderRadius.circular(
+                                              8), // ขอบมุมมน
                                           children: const [
                                             Padding(
                                               padding: EdgeInsets.symmetric(
@@ -479,6 +491,15 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
                                         isUserView = index == 0;
                                       });
                                     },
+                                    color: Colors
+                                        .black, // สีตัวอักษรเมื่อไม่ได้เลือก
+                                    selectedColor:
+                                        Colors.white, // สีตัวอักษรเมื่อเลือก
+                                    fillColor:
+                                        Colors.blue, // สีพื้นหลังเมื่อเลือก
+                                    splashColor: Colors.blueAccent, // สีเมื่อกด
+                                    borderRadius:
+                                        BorderRadius.circular(8), // ขอบมุมมน
                                     children: const [
                                       Padding(
                                         padding: EdgeInsets.symmetric(
@@ -491,14 +512,14 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
                                         child: Text('ช่างเทคนิค'),
                                       ),
                                     ],
-                                  ),
+                                  )
                                 ],
                               ),
-                        const SizedBox(height: 16),
                       ],
                     );
                   },
                 ),
+                const SizedBox(height: 2),
 
                 // ส่วนตัวกรอง
                 FilterWidget(
@@ -510,6 +531,7 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
                   onStatusChanged: _onStatusChanged,
                   onReset: _onReset,
                 ),
+                const SizedBox(height: 2),
 
                 // ส่วนแสดงข้อมูล
                 StreamBuilder<QuerySnapshot>(
@@ -700,165 +722,195 @@ class _InspectionHistoryPageState extends State<InspectionHistoryPage> {
                                       true, // ให้แสดง scrollbar ตลอดเวลา
                                   trackVisibility:
                                       true, // แสดง track ของ scrollbar
-                                  child: SingleChildScrollView(
-                                    controller:
-                                        _scrollController, // ใช้ตัวควบคุม scrollbar
-                                    scrollDirection: Axis
-                                        .horizontal, // ทำให้เลื่อนซ้าย-ขวาได้
-                                    child: IntrinsicWidth(
-                                      child: DataTable(
-                                        headingRowColor:
-                                            MaterialStateColor.resolveWith(
-                                          (states) => Colors.blueGrey.shade50,
-                                        ),
-                                        dataRowColor:
-                                            MaterialStateColor.resolveWith(
-                                          (states) => Colors.white,
-                                        ),
-                                        columns: const [
-                                          DataColumn(label: Text('หมายเลขถัง')),
-                                          DataColumn(label: Text('ประเภทถัง')),
-                                          DataColumn(label: Text('อาคาร')),
-                                          DataColumn(label: Text('ชั้น')),
-                                          DataColumn(
-                                              label: Text('วันที่ตรวจสอบ')),
-                                          DataColumn(label: Text('ผู้ตรวจสอบ')),
-                                          DataColumn(
-                                              label: Text('ประเภทผู้ใช้')),
-                                          DataColumn(
-                                              label: Text('ผลการตรวจสอบ')),
-                                          DataColumn(label: Text('หมายเหตุ')),
-                                          DataColumn(label: Text('การกระทำ')),
-                                        ],
-                                        rows: currentPageData.map((inspection) {
-                                          Color statusColor = Colors.grey;
-                                          if (inspection['status'] ==
-                                              'ตรวจสอบแล้ว') {
-                                            statusColor = Colors.green;
-                                          } else if (inspection['status'] ==
-                                              'ชำรุด') {
-                                            statusColor = Colors.red;
-                                          } else if (inspection['status'] ==
-                                              'ส่งซ่อม') {
-                                            statusColor = Colors.orange;
-                                          }
+                                  child: GestureDetector(
+                                    onHorizontalDragUpdate: (details) {
+                                      double newOffset =
+                                          _scrollController.offset -
+                                              details.primaryDelta!;
+                                      // กำหนดขอบเขตการเลื่อนซ้ายสุด
+                                      if (newOffset < 0) {
+                                        newOffset = 0;
+                                      }
+                                      // กำหนดขอบเขตการเลื่อนขวาสุด
+                                      double maxScroll = _scrollController
+                                          .position.maxScrollExtent;
+                                      if (newOffset > maxScroll) {
+                                        newOffset = maxScroll;
+                                      }
+                                      _scrollController.jumpTo(
+                                          newOffset); // เลื่อนตามตำแหน่งที่คำนวณ
+                                    },
+                                    child: SingleChildScrollView(
+                                      controller:
+                                          _scrollController, // ใช้ตัวควบคุม scrollbar
+                                      scrollDirection: Axis
+                                          .horizontal, // ทำให้เลื่อนซ้าย-ขวาได้
 
-                                          Color technicianStatusColor =
-                                              Colors.grey;
-                                          if (inspection['status_technician'] ==
-                                              'ตรวจสอบแล้ว') {
-                                            technicianStatusColor =
-                                                Colors.green;
-                                          } else if (inspection[
-                                                  'status_technician'] ==
-                                              'ชำรุด') {
-                                            technicianStatusColor = Colors.red;
-                                          } else if (inspection[
-                                                  'status_technician'] ==
-                                              'ส่งซ่อม') {
-                                            technicianStatusColor =
-                                                Colors.orange;
-                                          }
+                                      child: IntrinsicWidth(
+                                        child: DataTable(
+                                          headingRowColor:
+                                              MaterialStateColor.resolveWith(
+                                            (states) => Colors.blueGrey.shade50,
+                                          ),
+                                          dataRowColor:
+                                              MaterialStateColor.resolveWith(
+                                            (states) => Colors.white,
+                                          ),
+                                          columns: const [
+                                            DataColumn(
+                                                label: Text('หมายเลขถัง')),
+                                            DataColumn(
+                                                label: Text('ประเภทถัง')),
+                                            DataColumn(label: Text('อาคาร')),
+                                            DataColumn(label: Text('ชั้น')),
+                                            DataColumn(
+                                                label: Text('วันที่ตรวจสอบ')),
+                                            DataColumn(
+                                                label: Text('ผู้ตรวจสอบ')),
+                                            DataColumn(
+                                                label: Text('ประเภทผู้ใช้')),
+                                            DataColumn(
+                                                label: Text('ผลการตรวจสอบ')),
+                                            DataColumn(label: Text('หมายเหตุ')),
+                                            DataColumn(label: Text('การกระทำ')),
+                                          ],
+                                          rows:
+                                              currentPageData.map((inspection) {
+                                            Color statusColor = Colors.grey;
+                                            if (inspection['status'] ==
+                                                'ตรวจสอบแล้ว') {
+                                              statusColor = Colors.green;
+                                            } else if (inspection['status'] ==
+                                                'ชำรุด') {
+                                              statusColor = Colors.red;
+                                            } else if (inspection['status'] ==
+                                                'ส่งซ่อม') {
+                                              statusColor = Colors.orange;
+                                            }
 
-                                          return DataRow(
-                                            cells: [
-                                              DataCell(Text(
-                                                  inspection['tank_id']
-                                                          ?.toString() ??
-                                                      'N/A')),
-                                              DataCell(Text(inspection['type']
-                                                      ?.toString() ??
-                                                  'N/A')),
-                                              DataCell(Text(
-                                                  inspection['building']
-                                                          ?.toString() ??
-                                                      'N/A')),
-                                              DataCell(Text(inspection['floor']
-                                                      ?.toString() ??
-                                                  'N/A')),
-                                              DataCell(Text(
-                                                  inspection['date_checked']
-                                                          ?.toString() ??
-                                                      'N/A')),
-                                              DataCell(Text(
-                                                  inspection['inspector']
-                                                          ?.toString() ??
-                                                      'N/A')),
-                                              DataCell(Text(
-                                                  inspection['user_type']
-                                                          ?.toString() ??
-                                                      'N/A')),
-                                              DataCell(
-                                                Row(
-                                                  children: [
-                                                    Container(
-                                                      width: 12,
-                                                      height: 12,
-                                                      decoration: BoxDecoration(
-                                                        color: isUserView
-                                                            ? statusColor
-                                                            : technicianStatusColor,
-                                                        shape: BoxShape.circle,
+                                            Color technicianStatusColor =
+                                                Colors.grey;
+                                            if (inspection[
+                                                    'status_technician'] ==
+                                                'ตรวจสอบแล้ว') {
+                                              technicianStatusColor =
+                                                  Colors.green;
+                                            } else if (inspection[
+                                                    'status_technician'] ==
+                                                'ชำรุด') {
+                                              technicianStatusColor =
+                                                  Colors.red;
+                                            } else if (inspection[
+                                                    'status_technician'] ==
+                                                'ส่งซ่อม') {
+                                              technicianStatusColor =
+                                                  Colors.orange;
+                                            }
+
+                                            return DataRow(
+                                              cells: [
+                                                DataCell(Text(
+                                                    inspection['tank_id']
+                                                            ?.toString() ??
+                                                        'N/A')),
+                                                DataCell(Text(inspection['type']
+                                                        ?.toString() ??
+                                                    'N/A')),
+                                                DataCell(Text(
+                                                    inspection['building']
+                                                            ?.toString() ??
+                                                        'N/A')),
+                                                DataCell(Text(
+                                                    inspection['floor']
+                                                            ?.toString() ??
+                                                        'N/A')),
+                                                DataCell(Text(
+                                                    inspection['date_checked']
+                                                            ?.toString() ??
+                                                        'N/A')),
+                                                DataCell(Text(
+                                                    inspection['inspector']
+                                                            ?.toString() ??
+                                                        'N/A')),
+                                                DataCell(Text(
+                                                    inspection['user_type']
+                                                            ?.toString() ??
+                                                        'N/A')),
+                                                DataCell(
+                                                  Row(
+                                                    children: [
+                                                      Container(
+                                                        width: 12,
+                                                        height: 12,
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: isUserView
+                                                              ? statusColor
+                                                              : technicianStatusColor,
+                                                          shape:
+                                                              BoxShape.circle,
+                                                        ),
                                                       ),
-                                                    ),
-                                                    const SizedBox(width: 10),
-                                                    Text(
-                                                      isUserView
-                                                          ? (inspection[
-                                                                      'status']
-                                                                  ?.toString() ??
-                                                              'N/A')
-                                                          : (inspection[
-                                                                      'status_technician']
-                                                                  ?.toString() ??
-                                                              'N/A'),
-                                                    ),
-                                                  ],
+                                                      const SizedBox(width: 10),
+                                                      Text(
+                                                        isUserView
+                                                            ? (inspection[
+                                                                        'status']
+                                                                    ?.toString() ??
+                                                                'N/A')
+                                                            : (inspection[
+                                                                        'status_technician']
+                                                                    ?.toString() ??
+                                                                'N/A'),
+                                                      ),
+                                                    ],
+                                                  ),
                                                 ),
-                                              ),
-                                              DataCell(Text(
-                                                  inspection['remarks']
-                                                          ?.toString() ??
-                                                      'N/A')),
-                                              DataCell(
-                                                Row(
-                                                  children: [
-                                                    IconButton(
-                                                      icon: const Icon(
-                                                          Icons.edit),
-                                                      onPressed: () {
-                                                        _showStatusDialog(
+                                                DataCell(Text(
+                                                    inspection['remarks']
+                                                            ?.toString() ??
+                                                        'N/A')),
+                                                DataCell(
+                                                  Row(
+                                                    children: [
+                                                      IconButton(
+                                                        icon: const Icon(
+                                                            Icons.edit,
+                                                            color: Colors.blue),
+                                                        onPressed: () {
+                                                          _showStatusDialog(
+                                                              inspection[
+                                                                      'tank_id'] ??
+                                                                  '',
+                                                              inspection[
+                                                                      'status'] ??
+                                                                  '',
+                                                              isTechnician,
+                                                              isUserView);
+                                                        },
+                                                      ),
+                                                      IconButton(
+                                                        icon: const Icon(
+                                                            Icons.delete,
+                                                            color: Colors.red),
+                                                        onPressed: () {
+                                                          _showDeleteConfirmationDialog(
                                                             inspection[
                                                                     'tank_id'] ??
                                                                 '',
                                                             inspection[
-                                                                    'status'] ??
+                                                                    'date_checked'] ??
                                                                 '',
-                                                            isTechnician,
-                                                            isUserView);
-                                                      },
-                                                    ),
-                                                    IconButton(
-                                                      icon: const Icon(
-                                                          Icons.delete,
-                                                          color: Colors.red),
-                                                      onPressed: () {
-                                                        _showDeleteConfirmationDialog(
-                                                          inspection[
-                                                                  'tank_id'] ??
-                                                              '',
-                                                          inspection[
-                                                                  'date_checked'] ??
-                                                              '',
-                                                        );
-                                                      },
-                                                    ),
-                                                  ],
+                                                          );
+                                                        },
+                                                      ),
+                                                    ],
+                                                  ),
                                                 ),
-                                              ),
-                                            ],
-                                          );
-                                        }).toList(),
+                                              ],
+                                            );
+                                          }).toList(),
+                                        ),
                                       ),
                                     ),
                                   ),
